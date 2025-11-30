@@ -19,6 +19,7 @@ import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 import com.softsynth.ksyn.Oscillator;
+import com.softsynth.ksyn.math.PrimeFactors
 
 @Composable
 @Preview
@@ -41,6 +42,9 @@ fun App() {
 
             // 3. Display it
             Text("Sine Output: $value")
+            Text("8 db = ${com.softsynth.ksyn.math.decibelsToAmplitude(8.0)}")
+            val factors = PrimeFactors(20, 24)
+            Text("Prime factors of 20/24 are ${factors}")
         }
     }
 }

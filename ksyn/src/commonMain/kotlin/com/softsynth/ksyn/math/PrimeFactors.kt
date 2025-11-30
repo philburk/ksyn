@@ -28,7 +28,7 @@ private const val SIEVE_SIZE = 1000
 private val primes: IntArray = run {
     // Use Sieve of Eratosthenes to fill Prime table
     val sieve = BooleanArray(SIEVE_SIZE)
-    val primeList = ArrayList<Int>()
+    val primeList = mutableListOf<Int>()
     var i = 2
     while (i < (SIEVE_SIZE / 2)) {
         if (!sieve[i]) {
@@ -91,33 +91,31 @@ class PrimeFactors {
     }
 
     override fun toString(): String {
-        val buffer = StringBuilder()
-        printFactors(buffer, 1)
-        buffer.append("/")
-        printFactors(buffer, -1)
-        return buffer.toString()
+        val top = printFactors(1)
+        val bottom = printFactors(-1)
+        return "$top/$bottom"
     }
 
-    private fun printFactors(buffer: StringBuilder, sign: Int) {
+    private fun printFactors(sign: Int): String = buildString {
         var gotSome = false
         for (i in factors.indices) {
             val pf = factors[i] * sign
             if (pf > 0) {
                 if (gotSome)
-                    buffer.append('*')
+                    append('*')
                 val prime = primes[i]
                 if (pf == 1) {
-                    buffer.append("" + prime)
+                    append("" + prime)
                 } else if (pf == 2) {
-                    buffer.append("$prime*$prime")
+                    append("$prime*$prime")
                 } else if (pf > 2) {
-                    buffer.append("($prime^$pf)")
+                    append("($prime^$pf)")
                 }
                 gotSome = true
             }
         }
         if (!gotSome) {
-            buffer.append("1")
+            append("1")
         }
     }
 }
@@ -134,7 +132,7 @@ fun subtract(factorsA: IntArray, factorsB: IntArray): IntArray {
         min = factorsA.size
         max = factorsB.size
     }
-    val primeList = ArrayList<Int>()
+    val primeList = mutableListOf<Int>()
     var i = 0
     while (i < min) {
         primeList.add(factorsA[i] - factorsB[i])
@@ -165,7 +163,7 @@ fun add(factorsA: IntArray, factorsB: IntArray): IntArray {
         min = factorsA.size
         max = factorsB.size
     }
-    val primeList = ArrayList<Int>()
+    val primeList = mutableListOf<Int>()
     var i = 0
     while (i < min) {
         primeList.add(factorsA[i] + factorsB[i])
@@ -186,7 +184,7 @@ fun add(factorsA: IntArray, factorsB: IntArray): IntArray {
     return primeList.toIntArray()
 }
 
-private fun trimPrimeList(primeList: ArrayList<Int>) {
+private fun trimPrimeList(primeList: MutableList<Int>) {
     var i = primeList.size - 1
     // trim zero factors off end.
     while (i >= 0) {
@@ -201,14 +199,14 @@ private fun trimPrimeList(primeList: ArrayList<Int>) {
 
 fun factor(n: Int): IntArray {
     var num = n
-    val primeList = ArrayList<Int>()
+    val primeList = mutableListOf<Int>()
     var i = 0
     var p = primes[i]
     var exponent = 0
     while (num > 1) {
         // does the prime number divide evenly into n?
         val d = num / p
-        val m = d * p;
+        val m = d * p
         if (m == num) {
             num = d
             exponent += 1
@@ -227,7 +225,6 @@ fun factor(n: Int): IntArray {
 
 /**
  * Get prime from table.
- *
  *
  * @param n Warning: Do not exceed getPrimeCount()-1.
  * @return Nth prime number, the 0th prime is 2
