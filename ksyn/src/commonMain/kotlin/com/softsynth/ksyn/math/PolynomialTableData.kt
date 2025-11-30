@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.softsynth.math;
+package com.softsynth.ksyn.math
 
 /**
  * PolynomialTableData<br>
@@ -25,40 +25,21 @@ package com.softsynth.math;
  * @see ChebyshevPolynomial
  * @see Polynomial
  */
+class PolynomialTableData(polynomial: Polynomial, numFrames: Int) {
+    val data: DoubleArray = DoubleArray(numFrames)
+    private val polynomial: Polynomial = polynomial
 
-public class PolynomialTableData {
-
-    double[] data;
-    Polynomial polynomial;
-
-    /**
-     * Constructor which fills double[numFrames] with Polynomial data -1..1<br>
-     * Note that any Polynomial can plug in here, just make sure output is -1..1 when input ranges
-     * from -1..1
-     */
-    public PolynomialTableData(Polynomial polynomial, int numFrames) {
-        data = new double[numFrames];
-        this.polynomial = polynomial;
-        buildData();
+    init {
+        buildData()
     }
 
-    public double[] getData() {
-        return data;
-    }
-
-    void buildData() {
-        double xInterval = 2.0 / (data.length - 1); // FIXED, added "- 1"
-        double x;
-        for (int i = 0; i < data.length; i++) {
-            x = i * xInterval - 1.0;
-            data[i] = polynomial.evaluate(x);
+    private fun buildData() {
+        val xInterval = 2.0 / (data.size - 1) // FIXED, added "- 1"
+        var x: Double
+        for (i in data.indices) {
+            x = i * xInterval - 1.0
+            data[i] = polynomial.evaluate(x)
             // LOGGER.debug("x = " + x + ", p(x) = " + data[i] );
         }
-
     }
-
-    public static void main(String[] args) {
-        PolynomialTableData chebData = new PolynomialTableData(ChebyshevPolynomial.T(2), 8);
-    }
-
 }
