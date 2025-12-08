@@ -7,11 +7,6 @@ import com.softsynth.ksyn.ports.UnitPort
 import com.softsynth.ksyn.shared.time.TimeStamp
 import kotlin.math.pow
 
-// TODO private val SynthesisEngine.sampleRate: Any
-
-// The standard block size for the KSyn engine (SIMD friendly)
-const val KSYN_BLOCK_SIZE = 64
-
 /**
  * Base class for all unit generators.
  * Converted to Kotlin Multiplatform.
@@ -160,6 +155,8 @@ abstract class UnitGenerator {
     /**
      * The Pull Architecture Logic.
      * Recursively pulls data from upstream units.
+     *
+     * @param frameCount Current frame count, used to block infinite recursion in cyclic graphs.
      */
     fun pullData(frameCount: Long) {
         // Don't generate twice in case the paths merge (Diamond Graph problem)
@@ -190,8 +187,7 @@ abstract class UnitGenerator {
         val engine = synthesisEngine
             ?: throw RuntimeException("This ${this::class.simpleName} was not added to a SynthesisEngine.")
 
-        // TODO: Implement startUnit in Engine
-        // engine.startUnit(this)
+        engine.startUnit(this)
     }
 
     fun start(time: Double) {

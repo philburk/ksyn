@@ -28,8 +28,8 @@ abstract class UnitPort(
          set(unit: UnitGenerator?) {
              // If a port is in a circuit then we want to just use the lower level
              // unit that instantiated the circuit.
-             if (this.unitGenerator == null) {
-                 this.unitGenerator = unit
+             if (field == null) {
+                 field = unit
              }
          }
 

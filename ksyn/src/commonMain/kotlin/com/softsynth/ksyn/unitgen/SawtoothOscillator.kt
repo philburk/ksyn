@@ -15,6 +15,8 @@
  */
 package com.softsynth.ksyn.unitgen
 
+import com.softsynth.ksyn.Synthesizer
+
 /**
  * Simple sawtooth oscillator.
  *
@@ -23,14 +25,14 @@ package com.softsynth.ksyn.unitgen
 class SawtoothOscillator : UnitOscillator() {
 
     override fun generate() {
-        val frequencies: DoubleArray = frequency!!.getValues()
-        val amplitudes: DoubleArray = amplitude!!.getValues()
+        val frequencies: DoubleArray = frequency.getValues()
+        val amplitudes: DoubleArray = amplitude.getValues()
         val outputs: DoubleArray = output.getValues()
 
         // Variables have a single value.
         var currentPhase: Double = phase.getValue(0) // TODO support no partNum
 
-        for (i in 0..<KSYN_BLOCK_SIZE) {
+        for (i in 0..<Synthesizer.FRAMES_PER_BLOCK) {
             /* Generate sawtooth phasor to provide phase for sine generation. */
             val phaseIncrement: Double = convertFrequencyToPhaseIncrement(frequencies[i])
             currentPhase = incrementWrapPhase(currentPhase, phaseIncrement)

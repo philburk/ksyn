@@ -44,6 +44,8 @@ class UnitInputPort(
     /**
      * This is used internally by the SynthesisEngine to execute units based on their connections.
      * KSyn Update: No start/limit arguments (SIMD architecture).
+     *
+     * @param frameCount Current frame count. Only used to block recursion in cyclic graphs.
      */
     override fun pullData(frameCount: Long) {
         for (part in parts) {
@@ -82,10 +84,13 @@ class UnitInputPort(
     fun set(value: Double, time: Double) {
         set(0, value, time)
     }
+    fun set(value: Double, timeStamp: TimeStamp) {
+        set(0, value, timeStamp)
+    }
 
-    fun set(partNum: Int, value: Double, timeStamp: Double) {
+    fun set(partNum: Int, value: Double, time: Double) {
         // Check range or other logic here if needed (e.g. getValue(partNum))
-        scheduleCommand(timeStamp) {
+        scheduleCommand(time) {
             setValueInternal(partNum, value)
         }
     }

@@ -151,19 +151,17 @@ class SynthesisEngine() : Synthesizer {
     }
 
     override fun start() {
-        start(DEFAULT_FRAME_RATE)
+        start(DEFAULT_FRAME_RATE, 0, 2)
     }
 
     // TODO @Synchronized
-    override fun start(frameRate: Int) {
+    override fun start(frameRate: Int, numInputChannels: Int, numOutputChannels: Int) {
         if (started) return
 
         this.frameRate = frameRate
         this.framePeriod = 1.0 / frameRate
-
-
         inverseNyquist = 2.0 / frameRate
-
+        setupAudioBuffers(numInputChannels, numOutputChannels)
         started = true
     }
 

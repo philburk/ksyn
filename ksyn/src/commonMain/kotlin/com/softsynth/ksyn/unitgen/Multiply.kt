@@ -15,6 +15,7 @@
  */
 package com.softsynth.ksyn.unitgen
 
+import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.ports.UnitOutputPort
 
@@ -32,7 +33,6 @@ import com.softsynth.ksyn.ports.UnitOutputPort
  * @author Phil Burk (C) 2009 Mobileer Inc
  * @version 016
  * @see MultiplyAdd
- *
  * @see Subtract
  */
 class Multiply : UnitBinaryOperator {
@@ -53,7 +53,7 @@ class Multiply : UnitBinaryOperator {
         val aValues: DoubleArray = inputA.getValues()
         val bValues: DoubleArray = inputB.getValues()
         val outputs: DoubleArray = output.getValues()
-        for (i in 0..<KSYN_BLOCK_SIZE) {
+        for (i in 0..< Synthesizer.FRAMES_PER_BLOCK) {
             outputs[i] = aValues[i] * bValues[i]
         }
     }

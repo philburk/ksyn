@@ -17,7 +17,6 @@ open class UnitBlockPort(
     override val numParts: Int
         get() = parts.size
 
-
     /**
      * Factory method for creating parts.
      * Subclasses should override this to return their specific Part type.

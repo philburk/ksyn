@@ -17,7 +17,6 @@
 package com.softsynth.ksyn.ports
 
 import com.softsynth.ksyn.Synthesizer
-import com.softsynth.ksyn.unitgen.KSYN_BLOCK_SIZE
 import com.softsynth.ksyn.unitgen.UnitGenerator
 
 /**
@@ -31,7 +30,6 @@ class InputMixingBlockPart(
 
     // Internal buffer for summing inputs.
     // In KSyn, we use FloatArray for audio data (SIMD friendly).
-    // TODO private val mixer = FloatArray(KSYN_BLOCK_SIZE)
     private val mixer = DoubleArray(Synthesizer.FRAMES_PER_BLOCK)
 
     // Cache the single value for scalar access

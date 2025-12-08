@@ -36,8 +36,10 @@ interface Synthesizer {
      * output channels.
      *
      * @param frameRate in Hertz
+     * @param numInputChannels 0 for no input, 1 for mono, 2 for stereo, etcetera
+     * @param numOutputChannels 0 for no output, 1 for mono, 2 for stereo, etcetera
      */
-    fun start(frameRate: Int)
+    fun start(frameRate: Int, numInputChannels: Int, numOutputChannels: Int)
 
     /**
      * Starts the synthesizer using specific audio devices.
