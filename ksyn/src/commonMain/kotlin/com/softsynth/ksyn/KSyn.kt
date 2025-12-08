@@ -45,7 +45,7 @@ package com.softsynth.ksyn //import com.softsynth.engine.SynthesisEngine;
  *
  * @author Phil Burk (C) 2010 Mobileer Inc
  */
-object JSyn {
+object KSyn {
     // Update these for every release.
     private const val VERSION_MAJOR = 17
     private const val VERSION_MINOR = 2

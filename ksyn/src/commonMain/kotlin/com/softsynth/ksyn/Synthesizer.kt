@@ -20,7 +20,7 @@ import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.unitgen.UnitGenerator
 
 /**
- * A synthesizer used by JSyn to generate audio. The synthesizer executes a network of unit
+ * A synthesizer used by KSyn to generate audio. The synthesizer executes a network of unit
  * generators to create an audio signal.
  *
  * @author Phil Burk (C) 2010 Mobileer Inc
