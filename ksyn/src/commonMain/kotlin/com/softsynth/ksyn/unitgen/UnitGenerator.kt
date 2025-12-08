@@ -192,26 +192,36 @@ abstract class UnitGenerator {
 
     fun start(time: Double) {
         // Queue implementation would go here
-        start()
+        start(TimeStamp(time))
+    }
+    fun start(timeStamp: TimeStamp) {
+        val engine = synthesisEngine
+            ?: throw RuntimeException("This ${this::class.simpleName} was not added to a SynthesisEngine.")
+        engine.startUnit(this, timeStamp)
     }
 
     fun stop() {
-        // engine.stopUnit(this)
+        val engine = synthesisEngine
+            ?: throw RuntimeException("This ${this::class.simpleName} was not added to a SynthesisEngine.")
+        engine.stopUnit(this)
     }
 
     fun stop(time: Double) {
-        stop()
+        stop(TimeStamp(time))
+    }
+
+    fun stop(timeStamp: TimeStamp) {
+        val engine = synthesisEngine
+            ?: throw RuntimeException("This ${this::class.simpleName} was not added to a SynthesisEngine.")
+        engine.stopUnit(this, timeStamp)
     }
 
     /** Needed by UnitSink */
-    fun getUnitGenerator(): UnitGenerator {
-        return this
-    }
+    fun getUnitGenerator(): UnitGenerator = this
 
     /** Needed by UnitVoice */
     fun setPort(portName: String, value: Double, timeStamp: TimeStamp) {
-        val port = getPortByName(portName)
-        if (port is UnitInputPort) {
+        (getPortByName(portName) as? UnitInputPort)?.let { port ->
             port.set(0, value, timeStamp.time)
         }
     }
@@ -223,8 +233,7 @@ abstract class UnitGenerator {
                 // Indent based on level
                 val indent = "  ".repeat(level)
                 println("$indent Port: ${port.name}")
-                // Recurse
-                // port.printConnections(level + 1) 
+                port.printConnections(level + 1)
             }
         }
     }
