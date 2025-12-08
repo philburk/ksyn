@@ -16,7 +16,7 @@
 
 package com.softsynth.ksyn.engine
 
-import com.softsynth.ksyn.JSyn
+import com.softsynth.ksyn.KSyn
 import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.shared.time.ScheduledQueue
 import com.softsynth.ksyn.shared.time.TimeStamp
@@ -95,10 +95,10 @@ class SynthesisEngine() : Synthesizer {
     var inputLatency = 0.0
         private set
 
-    override val version = JSyn.VERSION
-    override val versionCode = JSyn.VERSION_CODE
+    override val version = KSyn.VERSION
+    override val versionCode = KSyn.VERSION_CODE
 
-    override fun toString() = "KSyn ${JSyn.VERSION_TEXT}"
+    override fun toString() = "KSyn ${KSyn.VERSION_TEXT}"
 
     private fun setupAudioBuffers(numInputChannels: Int, numOutputChannels: Int) {
         inputBuffer = if (numInputChannels > 0) {
