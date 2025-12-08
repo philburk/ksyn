@@ -42,7 +42,7 @@ abstract class UnitGenerator {
     private val ports: MutableMap<String, UnitPort> = mutableMapOf()
 
     var synthesisEngine: SynthesisEngine? = null
-        get() = field ?: throw RuntimeException("Unit synthesisEngine not set.")
+        get() = field
         set(value) {
             if (field != null && field !== value) {
                 throw RuntimeException("Unit synthesisEngine already set.")

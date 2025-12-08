@@ -4,6 +4,7 @@ import kotlinx.coroutines.runBlocking
 import com.softsynth.ksyn.KSyn;
 import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.unitgen.Multiply
+import com.softsynth.ksyn.unitgen.SawtoothOscillator
 import kotlinx.coroutines.launch
 
 import kotlin.test.Test
@@ -70,4 +71,42 @@ public class TestEngine {
         }
         assertEquals(expected, multiplier.output.value)
     }
+
+    @Test
+    fun testSawtoothOscillator() = runBlocking {
+        val synth = SynthesisEngine()
+        val multiplier = Multiply()
+        val sawtooth = SawtoothOscillator()
+        synth.add(multiplier)
+        synth.add(sawtooth)
+        multiplier.output.connect(sawtooth.frequency)
+        synth.start()
+        sawtooth.start()
+        multiplier.inputA.set(200.0)
+        multiplier.inputB.set(3.0)
+        var zeroCrossings = 0
+        var lastValue = 0.0
+        var numFrames = 0L
+        launch {
+            for (i in 0 until 1000) {
+                synth.generateNextBuffer()
+                val data = sawtooth.output.getValues()
+                for (i in 0 until data.size) {
+                    if (lastValue < 0.0 && data[i] >= 0.0) {
+                        zeroCrossings++
+                    }
+                    lastValue = data[i]
+                }
+                numFrames += data.size
+            }
+        }.join()
+        assertTrue(numFrames > 0)
+        assertTrue(zeroCrossings > 0)
+        assertEquals(numFrames, synth.frameCount)
+        assertTrue(zeroCrossings < numFrames)
+        val frequency = 600.0
+        val expectedZeroCrossings = (numFrames * frequency / synth.frameRate).toInt()
+        assertEquals(expectedZeroCrossings, zeroCrossings)
+    }
+
 }
