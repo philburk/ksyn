@@ -316,6 +316,11 @@ class SynthesisEngine() : Synthesizer {
             ?: throw RuntimeException("Audio Output not configured in start() method.")
     }
 
+    fun getInterleavedBuffer(): DoubleArray {
+        return outputBuffer?.interleavedBuffer
+            ?: throw RuntimeException("Audio Output not configured in start() method.")
+    }
+
     private suspend fun internalStopUnit(unit: UnitGenerator) {
         runningUnitListMutex.withLock {
             runningUnitList.remove(unit)

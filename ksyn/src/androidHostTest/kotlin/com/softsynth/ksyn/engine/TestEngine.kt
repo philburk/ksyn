@@ -3,7 +3,9 @@ package com.softsynth.ksyn.engine;
 import kotlinx.coroutines.runBlocking
 import com.softsynth.ksyn.KSyn;
 import com.softsynth.ksyn.shared.time.TimeStamp
+import com.softsynth.ksyn.unitgen.LineOut
 import com.softsynth.ksyn.unitgen.Multiply
+import com.softsynth.ksyn.unitgen.SawtoothOscillator
 import kotlinx.coroutines.launch
 
 import kotlin.test.Test
@@ -70,4 +72,48 @@ public class TestEngine {
         }
         assertEquals(expected, multiplier.output.value)
     }
+
+    @Test
+    fun testSawtoothOscillator() = runBlocking {
+        val synth = SynthesisEngine()
+        val multiplier = Multiply()
+        val sawtooth = SawtoothOscillator()
+        val lineOut = LineOut()
+        synth.add(multiplier)
+        synth.add(sawtooth)
+        synth.add(lineOut)
+        multiplier.output.connect(sawtooth.frequency)
+        sawtooth.output.connect(0, lineOut.input, 0)
+        sawtooth.output.connect(0, lineOut.input, 1)
+        multiplier.inputA.set(200.0)
+        multiplier.inputB.set(3.0)
+        val frequency = 600.0
+        synth.start()
+        lineOut.start()
+        var zeroCrossings = 0
+        var lastValue = 0.0
+        var numFrames = 0L
+        launch {
+            for (i in 0 until 1000) {
+                synth.generateNextBuffer()
+                val data = synth.getInterleavedBuffer()
+                for (i in 0 until SynthesisEngine.FRAMES_PER_BUFFER) {
+                    // Analyse the left channel of the stereo output.
+                    val sample = data[2 * i]
+                    if (lastValue < 0.0 && sample >= 0.0) {
+                        zeroCrossings++
+                    }
+                    lastValue = sample
+                }
+                numFrames += SynthesisEngine.FRAMES_PER_BUFFER
+            }
+        }.join()
+        assertTrue(numFrames > 0)
+        assertTrue(zeroCrossings > 0)
+        assertEquals(numFrames, synth.frameCount)
+        assertTrue(zeroCrossings < numFrames)
+        val expectedZeroCrossings = (numFrames * frequency / synth.frameRate).toInt()
+        assertEquals(expectedZeroCrossings, zeroCrossings)
+    }
+
 }

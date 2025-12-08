@@ -24,7 +24,7 @@ import com.softsynth.ksyn.shared.time.TimeStamp
  * @author Phil Burk, (C) 2009 Mobileer Inc
  */
 interface UnitSink {
-    val input: UnitInputPort?
+    var input: UnitInputPort
 
     /**
      * Begin execution of this unit by the Synthesizer. The input will pull data from any output
