@@ -168,8 +168,8 @@ fun transform(sign: Int, n: Int, ar: DoubleArray, ai: DoubleArray) {
                 val ti = (wr * ai[j]) + (wi * ar[j])
                 ar[j] = ar[i] - tr
                 ai[j] = ai[i] - ti
-                ar[i] += tr;
-                ai[i] += ti;
+                ar[i] += tr
+                ai[i] += ti
             }
 
             phase = (phase + phaseIncrement) and mask

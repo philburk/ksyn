@@ -32,6 +32,10 @@ class ScheduledQueue<T> {
     val isEmpty: Boolean
         get() = timeNodes.isEmpty()
 
+    /**
+     * Add object in time sorted order.
+     * This is an "insertion sort".
+     */
     fun add(time: TimeStamp, obj: T) {
         val searchResult = timeNodes.binarySearch { it.first.compareTo(time) }
         if (searchResult >= 0) {
@@ -44,6 +48,7 @@ class ScheduledQueue<T> {
         }
     }
 
+    /** Remove the earliest list of T objects that are ready to be processed. */
     fun removeNextList(time: TimeStamp): List<T>? {
         if (timeNodes.isNotEmpty() && timeNodes.first().first <= time) {
             return timeNodes.removeAt(0).second
@@ -51,6 +56,7 @@ class ScheduledQueue<T> {
         return null
     }
 
+    /** Remove the earliest T object that is ready to be processed. */
     fun removeNext(time: TimeStamp): T? {
         if (timeNodes.isNotEmpty()) {
             val (lowestTime, timeList) = timeNodes.first()
