@@ -1,3 +1,19 @@
+/*
+ * Copyright 2025 Phil Burk
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.softsynth.ksyn
 
 import androidx.compose.animation.AnimatedVisibility
@@ -13,6 +29,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.transitions.SlideTransition
 import ksyn_project.demo.generated.resources.Res
 import ksyn_project.demo.generated.resources.compose_multiplatform
 import org.jetbrains.compose.resources.painterResource
@@ -20,31 +38,15 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 
 import com.softsynth.ksyn.Oscillator;
 import com.softsynth.ksyn.math.PrimeFactors
+import com.mobileer.audiobridge.*
 
 @Composable
 @Preview
 fun App() {
+    // Wrap everything in your Theme so colors/typography work
     MaterialTheme {
-        var showContent by remember { mutableStateOf(false) }
-        Column(
-            modifier = Modifier
-                .background(MaterialTheme.colorScheme.primaryContainer)
-                .safeContentPadding()
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            // 1. Create an instance of your library class
-            // (If you haven't created Oscillator.kt yet, create it in ksyn/src/commonMain/kotlin/...)
-            val osc = com.softsynth.ksyn.Oscillator()
-
-            // 2. Call the math function
-            val value = osc.getSine(0.37)
-
-            // 3. Display it
-            Text("Sine Output: $value")
-            Text("8 db = ${com.softsynth.ksyn.math.decibelsToAmplitude(8.0)}")
-            val factors = PrimeFactors(20, 24)
-            Text("Prime factors of 20/24 are ${factors}")
+        Navigator(HomeScreen()) { navigator ->
+            SlideTransition(navigator)
         }
     }
 }

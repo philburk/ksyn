@@ -10,6 +10,12 @@ plugins {
     alias(libs.plugins.composeHotReload)
 }
 
+repositories {
+    mavenCentral()
+    mavenLocal() // Add this
+    google()
+}
+
 kotlin {
     androidTarget {
         compilerOptions {
@@ -18,11 +24,12 @@ kotlin {
     }
     
     jvm("desktop")
-    
-    js {
-        browser()
-        binaries.executable()
-    }
+
+    // Disable js because kc-audio-bridge does not support it yet.
+//    js {
+//        browser()
+//        binaries.executable()
+//    }
     
     @OptIn(ExperimentalWasmDsl::class)
     wasmJs {
@@ -45,6 +52,17 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(project(":ksyn"))
+            implementation("com.mobileer:audio-bridge:0.1.0")
+
+            // 1. The Core (Required): Basic navigation (Stack, push/pop)
+            implementation("cafe.adriel.voyager:voyager-navigator:1.1.0-beta03")
+            // 2. ScreenModel (Recommended): The "ViewModel" for Voyager
+            // This is essential if you want to keep state (variables) separate from UI
+            implementation("cafe.adriel.voyager:voyager-screenmodel:1.1.0-beta03")
+            // 3. Transitions (Optional): Animations like "Slide" or "Fade"
+            implementation("cafe.adriel.voyager:voyager-transitions:1.1.0-beta03")
+            // 4. Koin Integration (Optional): If you use Koin for Dependency Injection
+            implementation("cafe.adriel.voyager:voyager-koin:1.1.0-beta03")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
