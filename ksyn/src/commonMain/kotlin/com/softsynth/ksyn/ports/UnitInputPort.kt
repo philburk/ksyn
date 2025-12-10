@@ -32,10 +32,10 @@ class UnitInputPort(
     var isValueAdded: Boolean = false
 
     // Secondary constructors for convenience
-    constructor(name: String, defaultValue: AudioSample) : this(1, name, defaultValue)
     constructor(name: String) : this(1, name, KSyn.ZERO)
+    constructor(name: String, defaultValue: Double) : this(1, name, defaultValue.toSample())
+    constructor(name: String, defaultValue: AudioSample) : this(1, name, defaultValue)
     constructor(numParts: Int, name: String) : this(numParts, name, KSyn.ZERO)
-
 
     /**
      * Override the factory method from UnitBlockPort to create InputMixingBlockParts.

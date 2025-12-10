@@ -60,6 +60,9 @@ class HomeScreen : Screen {
                 Button(
                     onClick = { navigator.push(PlaySawtooth()) }
                 ) { Text("Play Sawtooth") }
+                Button(
+                    onClick = { navigator.push(PlayWhiteNoise()) }
+                ) { Text("Play WhiteNoise") }
             }
         }
     }

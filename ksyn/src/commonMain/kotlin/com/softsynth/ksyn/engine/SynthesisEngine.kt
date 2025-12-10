@@ -69,8 +69,11 @@ class SynthesisEngine() : Synthesizer {
     @Volatile
     private var started = false
     override var frameRate = DEFAULT_FRAME_RATE
-        private set
-    override var framePeriod = 1.0 / frameRate
+        private set(value) {
+            field = value
+            framePeriod = 1.0 / value
+        }
+    override var framePeriod = 1.0 / DEFAULT_FRAME_RATE
         private set
 
     // List of all units added to the synth.

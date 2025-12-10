@@ -42,6 +42,16 @@ public class TestEngine {
     }
 
     @Test
+    fun testFrameRates() {
+        val synth1 = SynthesisEngine()
+        assertEquals(44100, synth1.frameRate)
+        assertEquals(1.0 / 44100, synth1.framePeriod)
+        synth1.start(48000, 0, 2)
+        assertEquals(48000, synth1.frameRate)
+        assertEquals(1.0 / 48000, synth1.framePeriod)
+    }
+
+    @Test
     fun testDelayedSet() = runBlocking {
         val synth = SynthesisEngine()
         val multiplier = Multiply()
