@@ -87,7 +87,7 @@ class PrimeFactors {
         }
 
     fun getFactors(): IntArray {
-        return factors.clone()
+        return factors.copyOf()
     }
 
     override fun toString(): String {

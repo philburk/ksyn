@@ -128,14 +128,14 @@ interface Synthesizer {
      * Sleep until the specified audio time is reached. In non-real-time mode, this will enable the
      * synthesizer to run.
      */
-    @Throws(InterruptedException::class)
+    // TODO @Throws(InterruptedException::class)
     suspend fun sleepUntil(time: Double)
 
     /**
      * Sleep for the specified audio time duration. In non-real-time mode, this will enable the
      * synthesizer to run.
      */
-    @Throws(InterruptedException::class)
+    // TODO @Throws(InterruptedException::class)
     suspend fun sleepFor(duration: Double)
 
     suspend fun renderBuffer(): DoubleArray

@@ -119,3 +119,31 @@ compose.desktop {
         }
     }
 }
+
+// Define a task that copies the required JS files from the kc-audio-bridge JAR
+// into the build directory so the development server can find them.
+val copyAudioBridgeJsFiles = tasks.register<Copy>("copyAudioBridgeJsFiles") {
+    // Lazily get the wasmJs runtime classpath configuration.
+    // This avoids resolving it during the configuration phase.
+    val wasmJsRuntime = configurations.named("wasmJsRuntimeClasspath")
+
+    // The 'from' action will now execute later, during the execution phase.
+    // At this point, all dependencies (JARs and projects) are properly resolved.
+    from(wasmJsRuntime.map { configuration ->
+        // We find the specific JAR we need from the resolved files.
+        configuration.files.filter { it.isFile && it.name.startsWith("audio-bridge") }
+            .map { zipTree(it) }
+    }) {
+        // Only include the JS files we absolutely need from the JAR.
+        include("kcab-webaudio.js")
+        include("kcab-output-stream.js")
+    }
+
+    // Set the destination directory for the copied files.
+    into(layout.buildDirectory.dir("processedResources/wasmJs/main"))
+}
+
+// This dependency hook remains the same.
+tasks.named("wasmJsProcessResources") {
+    dependsOn(copyAudioBridgeJsFiles)
+}

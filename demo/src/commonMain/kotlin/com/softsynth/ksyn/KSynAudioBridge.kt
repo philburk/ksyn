@@ -26,11 +26,12 @@ class KSynAudioBridge(val synth: Synthesizer): AudioStreamManager() {
     val STEREO_CHANNELS = 2
 
     override suspend fun onAudioTask(scope: CoroutineScope) {
-        val framesPerBurst = 64 // TODO right size?
-        val stereoBuffer = FloatArray(framesPerBurst * STEREO_CHANNELS)
+        val framesPerBuffer = 64 // TODO right size?
+        val stereoBuffer = FloatArray(framesPerBuffer * STEREO_CHANNELS)
 
         // Set time to sleep based on the audio burst size.
-        val burstMillis = (1000 * synth.framePeriod).toLong()
+        val framesPerBurst = audioBridge.getFramesPerBurst()
+        val burstMillis = (1000 * framesPerBurst * 0.5 / synth.frameRate).toLong()
         synth.start()
         try {
             while (isActive()) { // Check isActive for cooperative cancellation
@@ -39,6 +40,7 @@ class KSynAudioBridge(val synth: Synthesizer): AudioStreamManager() {
                     stereoBuffer[i] = stereoBufferDouble[i].toFloat()
                 }
                 var framesLeft = stereoBuffer.size / STEREO_CHANNELS
+
                 var offset = 0
                 while (framesLeft > 0 && isActive()) {
                     val frameCount = audioBridge.write(stereoBuffer, offset, framesLeft)
