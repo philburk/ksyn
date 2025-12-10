@@ -31,10 +31,10 @@ class LineOut : UnitGenerator(), UnitSink {
     }
 
     override fun generate() {
-        val inputs0: DoubleArray = input.getValues(0)
-        val inputs1: DoubleArray = input.getValues(1)
-        val buffer0: DoubleArray = synthesisEngine!!.getOutputBuffer(0)
-        val buffer1: DoubleArray = synthesisEngine!!.getOutputBuffer(1)
+        val inputs0 = input.getValues(0)
+        val inputs1 = input.getValues(1)
+        val buffer0 = synthesisEngine!!.getOutputBuffer(0)
+        val buffer1 = synthesisEngine!!.getOutputBuffer(1)
         for (i in 0..< Synthesizer.FRAMES_PER_BLOCK) {
             buffer0[i] += inputs0[i]
             buffer1[i] += inputs1[i]

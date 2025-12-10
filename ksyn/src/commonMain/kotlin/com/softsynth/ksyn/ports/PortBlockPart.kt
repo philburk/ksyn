@@ -31,8 +31,11 @@
 
 package com.softsynth.ksyn.ports
 
+import com.softsynth.ksyn.AudioSample
+import com.softsynth.ksyn.AudioBuffer
 import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.engine.SynthesisEngine
+import com.softsynth.ksyn.toSample
 
 /**
  * Part of a multi-part port, for example, the left side of a stereo port.
@@ -41,12 +44,12 @@ import com.softsynth.ksyn.engine.SynthesisEngine
  */
 open class PortBlockPart internal constructor(
     internal val unitBlockPort: UnitBlockPort,
-    defaultValue: Double
+    defaultValue: AudioSample
 ) : ConnectableOutput, ConnectableInput {
 
-    private val values: DoubleArray = DoubleArray(Synthesizer.FRAMES_PER_BLOCK)
+    private val values = AudioBuffer(Synthesizer.FRAMES_PER_BLOCK)
 
-    open fun getValues(): DoubleArray = values
+    open fun getValues(): AudioBuffer = values
 
     private val connections = mutableListOf<PortBlockPart>()
 
@@ -54,12 +57,12 @@ open class PortBlockPart internal constructor(
         setValue(defaultValue)
     }
 
-    fun get(): Double = values[0]
+    fun get(): AudioSample = values[0]
 
-    open fun getValue() : Double = values[0]
+    open fun getValue() : AudioSample = values[0]
 
-    open fun setValue(value: Double) {
-        values.fill(value)
+    open fun setValue(value: AudioSample) {
+        values.fill(value.toSample())
     }
 
     val isConnected: Boolean

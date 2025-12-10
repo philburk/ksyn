@@ -16,8 +16,9 @@
 
 package com.softsynth.ksyn.ports
 
+import com.softsynth.ksyn.AudioBuffer
 import com.softsynth.ksyn.Synthesizer
-import com.softsynth.ksyn.unitgen.UnitGenerator
+import com.softsynth.ksyn.AudioSample
 
 /**
  * Handles the mixing logic for a single channel (Part) of a UnitInputPort.
@@ -25,35 +26,35 @@ import com.softsynth.ksyn.unitgen.UnitGenerator
  */
 class InputMixingBlockPart(
     private val unitInputPort: UnitInputPort,
-    defaultValue: Double
+    defaultValue: AudioSample
 ) : PortBlockPart(unitInputPort, defaultValue) {
 
     // Internal buffer for summing inputs.
     // In KSyn, we use FloatArray for audio data (SIMD friendly).
-    private val mixer = DoubleArray(Synthesizer.FRAMES_PER_BLOCK)
+    private val mixer = AudioBuffer(Synthesizer.FRAMES_PER_BLOCK)
 
     // Cache the single value for scalar access
-    private var current: Double = defaultValue
+    private var current: AudioSample = defaultValue
 
-    override fun getValue(): Double {
+    override fun getValue(): AudioSample {
         return current
     }
 
-    override fun setValue(value: Double) {
+    override fun setValue(value: AudioSample) {
         current = value
         super.setValue(value)
     }
 
-    override fun getValues(): DoubleArray {
+    override fun getValues(): AudioBuffer {
         val numConnections = connectionCount
-        val result: DoubleArray
+        val result: AudioBuffer
 
         if (numConnections == 0) {
             // No connection so just use our own data.
             result = super.getValues()
         } else {
             // Mix all of the connected ports.
-            var inputs: DoubleArray
+            var inputs: AudioBuffer
             var jCon = 0
 
             // Prime the mixer

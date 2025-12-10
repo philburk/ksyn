@@ -16,6 +16,8 @@
 
 package com.softsynth.ksyn.ports
 
+import com.softsynth.ksyn.AudioSample
+import com.softsynth.ksyn.KSyn
 import com.softsynth.ksyn.unitgen.UnitSink
 
 /**
@@ -26,11 +28,11 @@ import com.softsynth.ksyn.unitgen.UnitSink
 class UnitOutputPort(
     name: String = "Output",
     numParts: Int = 1,
-    defaultValue: Double = 0.0
+    defaultValue: AudioSample = KSyn.ZERO
 ) : UnitBlockPort(numParts, name, defaultValue), ConnectableOutput, GettablePort {
 
     // Support for legacy JSyn constructor order (numParts, name)
-    constructor(numParts: Int, name: String, defaultValue: Double = 0.0) : this(name, numParts, defaultValue)
+    constructor(numParts: Int, name: String, defaultValue: AudioSample = KSyn.ZERO) : this(name, numParts, defaultValue)
 
     fun flatten() {
         for (part in parts) {

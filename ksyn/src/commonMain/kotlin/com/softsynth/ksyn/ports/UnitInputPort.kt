@@ -1,7 +1,11 @@
 package com.softsynth.ksyn.ports
 
+import com.softsynth.ksyn.AudioBuffer
+import com.softsynth.ksyn.AudioSample
+import com.softsynth.ksyn.KSyn
 import com.softsynth.ksyn.ports.InputMixingBlockPart
 import com.softsynth.ksyn.shared.time.TimeStamp
+import com.softsynth.ksyn.toSample
 import com.softsynth.ksyn.unitgen.UnitGenerator
 
 /**
@@ -12,32 +16,32 @@ import com.softsynth.ksyn.unitgen.UnitGenerator
 class UnitInputPort(
     numParts: Int = 1,
     name: String = "Input",
-    defaultValue: Double = 0.0
+    defaultValue: AudioSample = KSyn.ZERO
 ) : UnitBlockPort(numParts, name, defaultValue), ConnectableInput, SettablePort {
 
-    var minimum: Double = 0.0
-    var maximum: Double = 1.0
+    var minimum: AudioSample = KSyn.ZERO
+    var maximum: AudioSample = KSyn.ONE
 
     // In Kotlin, 'defaultValue' overrides the property if defined in base,
     // or is a new property here. Renaming to avoid confusion with constructor arg.
-    private var _defaultValue: Double = defaultValue
+    private var _defaultValue: AudioSample = defaultValue
 
     // Stores the values set via set(), separate from the calculated/mixed audio values.
-    private val setValues: DoubleArray = DoubleArray(numParts) { defaultValue }
+    private val setValues = AudioBuffer(numParts) { defaultValue }
 
     var isValueAdded: Boolean = false
 
     // Secondary constructors for convenience
-    constructor(name: String, defaultValue: Double) : this(1, name, defaultValue)
-    constructor(name: String) : this(1, name, 0.0)
-    constructor(numParts: Int, name: String) : this(numParts, name, 0.0)
+    constructor(name: String, defaultValue: AudioSample) : this(1, name, defaultValue)
+    constructor(name: String) : this(1, name, KSyn.ZERO)
+    constructor(numParts: Int, name: String) : this(numParts, name, KSyn.ZERO)
 
 
     /**
      * Override the factory method from UnitBlockPort to create InputMixingBlockParts.
      * (Replaces Java's makeParts())
      */
-    override fun createPart(index: Int, defaultValue: Double): PortBlockPart {
+    override fun createPart(index: Int, defaultValue: AudioSample): PortBlockPart {
         return InputMixingBlockPart(this, defaultValue)
     }
 
@@ -54,7 +58,7 @@ class UnitInputPort(
         }
     }
 
-    override fun setValueInternal(partNum: Int, value: Double) {
+    override fun setValueInternal(partNum: Int, value: AudioSample) {
         super.setValueInternal(partNum, value)
         setValues[partNum] = value
     }
@@ -63,15 +67,19 @@ class UnitInputPort(
     // Setters
     // ==========================================
 
-    fun set(value: Double) {
-        set(0, value)
+    fun set(value: Float) {
+        set(0, value.toSample())
     }
 
-    override fun set(partNum: Int, value: Double, timeStamp: TimeStamp) {
+    fun set(value: Double) {
+        set(0, value.toSample())
+    }
+
+    override fun set(partNum: Int, value: AudioSample, timeStamp: TimeStamp) {
         set(partNum, value, timeStamp.time)
     }
 
-    fun set(partNum: Int, value: Double) {
+    fun set(partNum: Int, value: AudioSample) {
         // Immediate update of local storage
         setValues[partNum] = value
 
@@ -81,14 +89,19 @@ class UnitInputPort(
         }
     }
 
-    fun set(value: Double, time: Double) {
+    fun set(value: AudioSample, time: Double) {
         set(0, value, time)
     }
-    fun set(value: Double, timeStamp: TimeStamp) {
-        set(0, value, timeStamp)
+
+    fun set(value: Float, timeStamp: TimeStamp) {
+        set(0, value.toSample(), timeStamp)
     }
 
-    fun set(partNum: Int, value: Double, time: Double) {
+    fun set(value: Double, timeStamp: TimeStamp) {
+        set(0, value.toSample(), timeStamp)
+    }
+
+    fun set(partNum: Int, value: AudioSample, time: Double) {
         // Check range or other logic here if needed (e.g. getValue(partNum))
         scheduleCommand(time) {
             setValueInternal(partNum, value)
@@ -99,23 +112,29 @@ class UnitInputPort(
     // Getters & Properties
     // ==========================================
 
-    override fun get(partNum: Int): Double {
+    override fun get(partNum: Int): AudioSample {
         return setValues[partNum]
     }
 
-    var defaultValue: Double
+    var defaultValue: AudioSample
         get() = _defaultValue
         set(value) {
             _defaultValue = value
         }
 
     /**
-     * Convenience function for setting limits on a port.
+     * Convenience functions for setting limits on a port.
      */
+    fun setup(minimum: Float, value: Float, maximum: Float) {
+        this.minimum = minimum.toSample()
+        this.maximum = maximum.toSample()
+        this.defaultValue = value.toSample()
+        set(value)
+    }
     fun setup(minimum: Double, value: Double, maximum: Double) {
-        this.minimum = minimum
-        this.maximum = maximum
-        this.defaultValue = value
+        this.minimum = minimum.toSample()
+        this.maximum = maximum.toSample()
+        this.defaultValue = value.toSample()
         set(value)
     }
 

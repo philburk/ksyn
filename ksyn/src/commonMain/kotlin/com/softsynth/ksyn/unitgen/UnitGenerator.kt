@@ -1,5 +1,6 @@
 package com.softsynth.ksyn.unitgen
 
+import com.softsynth.ksyn.AudioSample
 import com.softsynth.ksyn.engine.SynthesisEngine
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.ports.UnitOutputPort
@@ -220,7 +221,7 @@ abstract class UnitGenerator {
     fun getUnitGenerator(): UnitGenerator = this
 
     /** Needed by UnitVoice */
-    fun setPort(portName: String, value: Double, timeStamp: TimeStamp) {
+    fun setPort(portName: String, value: AudioSample, timeStamp: TimeStamp) {
         (getPortByName(portName) as? UnitInputPort)?.let { port ->
             port.set(0, value, timeStamp.time)
         }

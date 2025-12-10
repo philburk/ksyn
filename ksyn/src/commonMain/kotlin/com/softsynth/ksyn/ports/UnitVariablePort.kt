@@ -16,25 +16,31 @@
 
 package com.softsynth.ksyn.ports
 
+import com.softsynth.ksyn.AudioSample
+import com.softsynth.ksyn.KSyn
 import com.softsynth.ksyn.shared.time.TimeStamp
+import com.softsynth.ksyn.toSample
 
-open class UnitVariablePort(name: String, value: Double = 0.0) : UnitPort(name), SettablePort {
+open class UnitVariablePort(name: String, value: AudioSample = KSyn.ZERO) : UnitPort(name), SettablePort {
 
     init {
         this.value = value
     }
 
+    fun set(partNum: Int, value: Float) {
+        this.value = value.toSample()
+    }
     fun set(partNum: Int, value: Double) {
-        this.value = value
+        this.value = value.toSample()
     }
 
-    fun get(partNum: Int): Double = value
+    fun get(partNum: Int): AudioSample = value
 
-    override fun set(partNum: Int, value: Double, timeStamp: TimeStamp) {
+    override fun set(partNum: Int, value: AudioSample, timeStamp: TimeStamp) {
         scheduleCommand(timeStamp.time) { set(partNum, value) }
     }
     
-   override fun getValue(partNum: Int): Double = value
+   override fun getValue(partNum: Int): AudioSample = value
 
     override val numParts: Int = 1
 }

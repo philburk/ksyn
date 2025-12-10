@@ -1,5 +1,6 @@
 package com.softsynth.ksyn.ports
 
+import com.softsynth.ksyn.toSample
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -10,11 +11,11 @@ class TestUnitInputPort {
     @Test
     fun testSet() {
         val port = UnitInputPort("input")
-        assertEquals(0.0, port.get(0))
+        assertEquals(0.0.toSample(), port.get(0))
         port.set(0.2)
-        assertEquals(0.2, port.get(0))
+        assertEquals(0.2.toSample(), port.get(0))
         port.set(-0.7)
-        assertEquals(-0.7, port.get(0))
+        assertEquals(-0.7.toSample(), port.get(0))
     }
 
     @Test
@@ -40,14 +41,14 @@ class TestUnitInputPort {
     fun testSetValueInternal() {
         val numParts = 4
         val port = UnitInputPort(numParts, "Tester")
-        port.setValueInternal(0, 100.0)
-        port.setValueInternal(2, 120.0)
-        port.setValueInternal(1, 110.0)
-        port.setValueInternal(3, 130.0)
-        assertEquals(100.0, port.getValue(0), "check port value")
-        assertEquals(120.0, port.getValue(2), "check port value")
-        assertEquals(110.0, port.getValue(1), "check port value")
-        assertEquals(130.0, port.getValue(3), "check port value")
+        port.setValueInternal(0, 100.0.toSample())
+        port.setValueInternal(2, 120.0.toSample())
+        port.setValueInternal(1, 110.0.toSample())
+        port.setValueInternal(3, 130.0.toSample())
+        assertEquals(100.0.toSample(), port.getValue(0), "check port value")
+        assertEquals(120.0.toSample(), port.getValue(2), "check port value")
+        assertEquals(110.0.toSample(), port.getValue(1), "check port value")
+        assertEquals(130.0.toSample(), port.getValue(3), "check port value")
     }
 
     @Test
@@ -56,10 +57,10 @@ class TestUnitInputPort {
         val output = UnitOutputPort("output")
         output.connect(input)
         val outputData = output.getValues()
-        outputData.fill(23.45)
+        outputData.fill(23.45.toSample())
         input.pullData(0)
         val inputData = input.getValues()
-        assertEquals(23.45, inputData[0])
+        assertEquals(23.45.toSample(), inputData[0])
     }
 
     @Test
@@ -71,10 +72,10 @@ class TestUnitInputPort {
         output2.connect(input)
         val outputData1 = output1.getValues()
         val outputData2 = output2.getValues()
-        outputData1.fill(20.0)
-        outputData2.fill(5.67)
+        outputData1.fill(20.0.toSample())
+        outputData2.fill(5.67.toSample())
         input.pullData(0)
         val inputData = input.getValues()
-        assertEquals(25.67, inputData[0])
+        assertEquals(25.67.toSample(), inputData[0])
     }
 }

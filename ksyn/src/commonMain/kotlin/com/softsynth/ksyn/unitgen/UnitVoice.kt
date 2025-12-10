@@ -1,5 +1,6 @@
 package com.softsynth.ksyn.unitgen
 
+import com.softsynth.ksyn.AudioSample
 import com.softsynth.ksyn.shared.time.TimeStamp
 
 
@@ -31,7 +32,7 @@ interface UnitVoice : UnitSource {
      * @param value
      * @param timeStamp
      */
-    fun setPort(portName: String, value: Double, timeStamp: TimeStamp)
+    fun setPort(portName: String, value: AudioSample, timeStamp: TimeStamp)
 
     fun usePreset(presetIndex: Int)
 }

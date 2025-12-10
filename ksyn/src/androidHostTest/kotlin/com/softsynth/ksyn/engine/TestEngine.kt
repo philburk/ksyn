@@ -3,6 +3,7 @@ package com.softsynth.ksyn.engine;
 import kotlinx.coroutines.runBlocking
 import com.softsynth.ksyn.KSyn;
 import com.softsynth.ksyn.shared.time.TimeStamp
+import com.softsynth.ksyn.toSample
 import com.softsynth.ksyn.unitgen.LineOut
 import com.softsynth.ksyn.unitgen.Multiply
 import com.softsynth.ksyn.unitgen.SawtoothOscillator
@@ -33,11 +34,11 @@ public class TestEngine {
         multiplier.start()
         multiplier.inputA.set(2.0)
         multiplier.inputB.set(3.0)
-        assertEquals(0.0, multiplier.output.get(0))
+        assertEquals(0.0.toSample(), multiplier.output.get(0))
         launch {
             synth.generateNextBuffer()
         }.join()
-        assertEquals(6.0, multiplier.output.getValues()[0])
+        assertEquals(6.0.toSample(), multiplier.output.getValues()[0])
     }
 
     @Test
@@ -50,14 +51,14 @@ public class TestEngine {
         val future = TimeStamp(synth.currentTime).makeRelative(0.01)
         multiplier.inputA.set(2.0, future)
         multiplier.inputB.set(3.0, future)
-        val expected = 6.0
+        val expected = 6.0.toSample()
         // Have to generate buffers until we reach the future timestamp to get the delayed result.
-        assertEquals(0.0, multiplier.output.get(0))
+        assertEquals(0.0.toSample(), multiplier.output.get(0))
         launch {
             var counter = 0
             while (synth.currentTime < future.time) {
                 synth.generateNextBuffer()
-                assertEquals(0.0, multiplier.output.getValues()[0])
+                assertEquals(0.0.toSample(), multiplier.output.getValues()[0])
                 counter++
                 assertTrue(counter < 100) // Don't run wild.
             }

@@ -15,10 +15,12 @@
  */
 package com.softsynth.ksyn.unitgen
 
+import com.softsynth.ksyn.KSyn
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.ports.UnitOutputPort
 import com.softsynth.ksyn.ports.UnitVariablePort
 import com.softsynth.ksyn.shared.time.TimeStamp
+import com.softsynth.ksyn.toSample
 
 /**
  * Base class for all oscillators.
@@ -36,7 +38,7 @@ abstract class UnitOscillator : UnitGenerator(), UnitVoice {
     init {
         addPort(UnitInputPort(PORT_NAME_FREQUENCY).also { frequency = it })
         frequency.setup(40.0, DEFAULT_FREQUENCY, 8000.0)
-        addPort(UnitInputPort(PORT_NAME_AMPLITUDE, DEFAULT_AMPLITUDE).also { amplitude = it })
+        addPort(UnitInputPort(PORT_NAME_AMPLITUDE, DEFAULT_AMPLITUDE.toSample()).also { amplitude = it })
         addPort(UnitVariablePort(PORT_NAME_PHASE).also { phase = it })
         addPort(UnitOutputPort(PORT_NAME_OUTPUT).also { output = it })
     }
@@ -75,12 +77,12 @@ abstract class UnitOscillator : UnitGenerator(), UnitVoice {
     }
 
     override fun noteOff(timeStamp: TimeStamp) {
-        amplitude.set(0.0, timeStamp.time)
+        amplitude.set(KSyn.ZERO, timeStamp.time)
     }
 
     override fun noteOn(freq: Double, ampl: Double, timeStamp: TimeStamp) {
-        frequency.set(freq, timeStamp.time)
-        amplitude.set(ampl, timeStamp.time)
+        frequency.set(freq.toSample(), timeStamp.time)
+        amplitude.set(ampl.toSample(), timeStamp.time)
     }
 
     override fun usePreset(presetIndex: Int) {

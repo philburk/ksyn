@@ -16,35 +16,51 @@
 package com.softsynth.ksyn //import com.softsynth.engine.SynthesisEngine;
 
 /**
- * JSyn Synthesizer for Java. Use this factory class to create a synthesizer. This code demonstrates
+ * KSyn Synthesizer for Kotlin and Java.
+ * Use this factory class to create a synthesizer. This code demonstrates
  * how to start playing a sine wave:
  *
  * <pre>`
  * // Create a context for the synthesizer.
- * synth = JSyn.createSynthesizer();
+ * synth = KSyn.createSynthesizer()
  *
  * // Start synthesizer using default stereo output at 44100 Hz.
- * synth.start();
+ * synth.start()
  *
  * // Add a tone generator.
- * synth.add( osc = new SineOscillator() );
+ * synth.add( osc = new SineOscillator() )
  * // Add a stereo audio output unit.
- * synth.add( lineOut = new LineOut() );
+ * synth.add( lineOut = new LineOut() )
  *
  * // Connect the oscillator to both channels of the output.
- * osc.output.connect( 0, lineOut.input, 0 );
- * osc.output.connect( 0, lineOut.input, 1 );
+ * osc.output.connect( 0, lineOut.input, 0 )
+ * osc.output.connect( 0, lineOut.input, 1 )
  *
  * // Set the frequency and amplitude for the sine wave.
- * osc.frequency.set( 345.0 );
- * osc.amplitude.set( 0.6 );
+ * osc.frequency.set( 345.0 )
+ * osc.amplitude.set( 0.6 )
  *
  * // We only need to start the LineOut. It will pull data from the oscillator.
- * lineOut.start();
-` *  </pre>
+ * lineOut.start()
+ *
+ * // Render audio and return it in an AudioBuffer.
+ * val buffer = synth.renderBuffer()
+`*  </pre>
  *
  * @author Phil Burk (C) 2010 Mobileer Inc
  */
+
+// Use a typealias so we can experiment with switching between Float and Double.
+typealias AudioSample = Float
+typealias AudioBuffer = FloatArray
+@Suppress("NOTHING_TO_INLINE")
+inline fun Number.toSample(): AudioSample = this.toFloat()
+
+//typealias AudioSample = Double
+//typealias AudioBuffer = DoubleArray
+//@Suppress("NOTHING_TO_INLINE")
+//inline fun Number.toSample(): AudioSample = this.toDouble()
+
 object KSyn {
     // Update these for every release.
     private const val VERSION_MAJOR = 17
@@ -65,4 +81,6 @@ object KSyn {
         return com.softsynth.ksyn.engine.SynthesisEngine();
     }
 
+    const val ZERO: AudioSample = 0.0f
+    const val ONE: AudioSample = 1.0f
 }

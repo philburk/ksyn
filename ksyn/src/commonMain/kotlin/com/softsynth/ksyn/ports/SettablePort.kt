@@ -16,6 +16,7 @@
 
 package com.softsynth.ksyn.ports
 
+import com.softsynth.ksyn.AudioSample
 import com.softsynth.ksyn.shared.time.TimeStamp
 
 /**
@@ -24,5 +25,5 @@ import com.softsynth.ksyn.shared.time.TimeStamp
  * @author Phil Burk (C) 2009 Mobileer Inc
  */
 interface SettablePort : GettablePort {
-    fun set(partNum: Int, value: Double, timeStamp: TimeStamp)
+    fun set(partNum: Int, value: AudioSample, timeStamp: TimeStamp)
 }

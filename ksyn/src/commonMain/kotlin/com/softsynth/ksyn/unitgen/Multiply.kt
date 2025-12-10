@@ -50,9 +50,9 @@ class Multiply : UnitBinaryOperator {
     }
 
     override fun generate() {
-        val aValues: DoubleArray = inputA.getValues()
-        val bValues: DoubleArray = inputB.getValues()
-        val outputs: DoubleArray = output.getValues()
+        val aValues = inputA.getValues()
+        val bValues = inputB.getValues()
+        val outputs = output.getValues()
         for (i in 0..< Synthesizer.FRAMES_PER_BLOCK) {
             outputs[i] = aValues[i] * bValues[i]
         }

@@ -16,11 +16,12 @@
 
 package com.softsynth.ksyn.ports
 
+import com.softsynth.ksyn.AudioSample
 import com.softsynth.ksyn.unitgen.UnitGenerator
 
 interface GettablePort {
     val name: String
     val numParts: Int
-    fun getValue(partNum: Int): Double
+    fun getValue(partNum: Int): AudioSample
     val unitGenerator: UnitGenerator?
 }
