@@ -52,8 +52,8 @@ class CrossFade : UnitGenerator() {
 
         for (i in 0..<Synthesizer.FRAMES_PER_BLOCK) {
             // Scale and offset to 0.0 to 1.0 range.
-            val gain = (fades[i] * 0.5) + 0.5
-            outputs[i] = ((input0s[i] * (1.0 - gain)) + (input1s[i] * gain)).toSample()
+            val gain = (fades[i] * 0.5f) + 0.5f
+            outputs[i] = ((input0s[i] * (1.0f - gain)) + (input1s[i] * gain)).toSample()
         }
     }
 }
