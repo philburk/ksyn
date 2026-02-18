@@ -47,7 +47,7 @@ fastlane/test_output/
 .mtj.tmp/
 
 # Package Files #
-*.jar
+# *.jar
 *.war
 *.nar
 *.ear
