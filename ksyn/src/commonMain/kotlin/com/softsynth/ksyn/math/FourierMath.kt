@@ -137,7 +137,6 @@ fun transform(sign: Int, n: Int, ar: DoubleArray, ai: DoubleArray) {
     val mask = n - 1
     val cosineOffset = n / 4 // phase offset between cos and sin
 
-    var i: Int
     var j: Int
     for (i in 0 until n) {
         j = reverseTable[i]
@@ -187,7 +186,6 @@ fun transform(sign: Int, n: Int, ar: FloatArray, ai: FloatArray) {
     val mask = n - 1
     val cosineOffset = n / 4 // phase offset between cos and sin
 
-    var i: Int
     var j: Int
     for (i in 0 until n) {
         j = reverseTable[i]
@@ -235,15 +233,36 @@ fun transform(sign: Int, n: Int, ar: FloatArray, ai: FloatArray) {
  * @return for example, 9 for an input value of 512
  */
 fun numBits(powerOf2: Int): Int {
-    var i = 0
+    var i = -1
     // assert ((powerOf2 and (powerOf2 - 1)) == 0); // is it a power of 2?
     var p2 = powerOf2
-    i = -1
     while (p2 > 0) {
         p2 = p2 shr 1
         i++
     }
     return i
+}
+
+/**
+ * Calculate an FFT in place, modifying the input arrays.
+ *
+ * @param n
+ * @param ar
+ * @param ai
+ */
+fun fft(n: Int, ar: FloatArray, ai: FloatArray) {
+    transform(1, n, ar, ai) // TODO -1 or 1
+}
+
+/**
+ * Calculate an inverse FFT in place, modifying the input arrays.
+ *
+ * @param n
+ * @param ar
+ * @param ai
+ */
+fun ifft(n: Int, ar: FloatArray, ai: FloatArray) {
+    transform(-1, n, ar, ai) // TODO -1 or 1
 }
 
 /**
