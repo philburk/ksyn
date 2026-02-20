@@ -47,11 +47,7 @@ fastlane/test_output/
 .mtj.tmp/
 
 # Package Files #
-<<<<<<< HEAD
 # *.jar
-=======
-*.jar
->>>>>>> origin/legacy_jsyn
 *.war
 *.nar
 *.ear

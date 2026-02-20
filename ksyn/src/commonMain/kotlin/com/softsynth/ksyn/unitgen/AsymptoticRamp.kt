@@ -18,6 +18,7 @@ package com.softsynth.ksyn.unitgen
 import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.ports.UnitVariablePort
+import com.softsynth.ksyn.toSample
 import kotlin.math.abs
 
 /**
@@ -42,7 +43,7 @@ class AsymptoticRamp : UnitFilter() {
     var current = UnitVariablePort("Current")
     var halfLife = UnitInputPort(1, "HalfLife", 0.1f)
     private var previousHalfLife: Double = -1.0
-    private var decayScalar: Float = 0.99f
+    private var decayScalar: Double = 0.99
 
     init {
         addPort(halfLife)
@@ -53,28 +54,28 @@ class AsymptoticRamp : UnitFilter() {
         val outputs = output.getValues()
         val inputs = input.getValues()
         val currentHalfLife = halfLife.getValues()[0].toDouble()
-        var currentValue = current.getValue(0)
-        var inputValue: Float = currentValue
+        var currentValue = current.getValue(0).toDouble()
+        var inputValue: Double
 
         if (currentHalfLife != previousHalfLife) {
-            decayScalar = convertHalfLifeToMultiplier(currentHalfLife).toFloat()
+            decayScalar = convertHalfLifeToMultiplier(currentHalfLife)
             previousHalfLife = currentHalfLife
         }
 
         for (i in 0..<Synthesizer.FRAMES_PER_BLOCK) {
-            inputValue = inputs[i]
+            inputValue = inputs[i].toDouble()
             currentValue += decayScalar * (inputValue - currentValue)
-            outputs[i] = currentValue
+            outputs[i] = currentValue.toSample()
         }
 
         /*
          * When current gets close to input, set current to input to prevent FP underflow, which can
          * cause a severe performance degradation in 'C'.
          */
-        if (abs(inputValue - currentValue) < VERY_SMALL_FLOAT) {
-            currentValue = inputValue
+        if (abs(inputs[Synthesizer.FRAMES_PER_BLOCK - 1].toDouble() - currentValue) < VERY_SMALL_FLOAT) {
+            currentValue = inputs[Synthesizer.FRAMES_PER_BLOCK - 1].toDouble()
         }
 
-        current.set(0, currentValue)
+        current.set(0, currentValue.toSample())
     }
 }
