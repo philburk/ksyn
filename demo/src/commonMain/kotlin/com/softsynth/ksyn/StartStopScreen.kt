@@ -24,7 +24,10 @@ interface KSynPlayable {
     fun stop()
 }
 
-open class StartStopScreen(val playable: KSynPlayable) : Screen {
+open class StartStopScreen(
+    val playable: KSynPlayable,
+    val customContent: @Composable () -> Unit = {}
+) : Screen {
 
     @Composable
     override fun Content() {
@@ -46,6 +49,8 @@ open class StartStopScreen(val playable: KSynPlayable) : Screen {
                 }
 
                 Text("Play KSyn SawtoothOscillator")
+                
+                customContent()
 
                 Row {
                     Button(
