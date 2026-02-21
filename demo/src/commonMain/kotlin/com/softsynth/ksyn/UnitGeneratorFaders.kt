@@ -6,6 +6,8 @@ import androidx.compose.ui.Modifier
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.unitgen.UnitGenerator
 
+import androidx.compose.runtime.key
+
 /**
  * A generic Composable that inspects a UnitGenerator and automatically
  * generates a PortFader for every UnitInputPort it has.
@@ -28,13 +30,15 @@ fun UnitGeneratorFaders(
                 val isExponential = minValue > 0f
                 
                 // Add the fader
-                PortFader(
-                    port = port,
-                    minValue = minValue,
-                    maxValue = maxValue,
-                    isExponential = isExponential,
-                    name = port.name
-                )
+                key(unitGenerator, port.name) {
+                    PortFader(
+                        port = port,
+                        minValue = minValue,
+                        maxValue = maxValue,
+                        isExponential = isExponential,
+                        name = port.name
+                    )
+                }
             }
         }
     }

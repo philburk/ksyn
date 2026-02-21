@@ -63,7 +63,7 @@ abstract class UnitGenerator {
         }
 
     val frameRate: Double
-        get() = (synthesisEngine?.frameRate ?: 44100.0) as Double
+        get() = synthesisEngine?.frameRate?.toDouble() ?: 44100.0
 
     val framePeriod: Double
         get() = 1.0 / frameRate

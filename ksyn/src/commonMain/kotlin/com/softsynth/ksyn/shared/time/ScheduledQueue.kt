@@ -16,68 +16,90 @@
 
 package com.softsynth.ksyn.shared.time
 
+import kotlinx.coroutines.sync.Mutex
+
 /**
  * Store objects in time sorted order.
  *
  * This is a multiplatform replacement for a `TreeMap`-based scheduled queue.
  * It uses a sorted list to maintain order.
  *
- * Note: The original Java class used `synchronized` methods for thread safety.
- * This implementation is not thread-safe. For multiplatform thread safety,
- * consider using a Mutex from `kotlinx.coroutines.sync`.
+ * This implementation is now thread-safe via a lightweight spin-lock over a coroutine Mutex
+ * which satisfies the concurrent constraints across Kotlin Common platforms (specifically
+ * protecting the Desktop UI Thread from colliding with the Desktop Audio Synthesis Thread).
  */
 class ScheduledQueue<T> {
     private val timeNodes = mutableListOf<Pair<TimeStamp, MutableList<T>>>()
+    private val lock = Mutex()
+
+    private inline fun <R> withSpinLock(block: () -> R): R {
+        // Simple non-suspending spin lock for brief list modifications
+        while (!lock.tryLock()) { }
+        try {
+            return block()
+        } finally {
+            lock.unlock()
+        }
+    }
 
     val isEmpty: Boolean
-        get() = timeNodes.isEmpty()
+        get() = withSpinLock { timeNodes.isEmpty() }
 
     /**
      * Add object in time sorted order.
      * This is an "insertion sort".
      */
     fun add(time: TimeStamp, obj: T) {
-        val searchResult = timeNodes.binarySearch { it.first.compareTo(time) }
-        if (searchResult >= 0) {
-            // Timestamp already exists, add to the list.
-            timeNodes[searchResult].second.add(obj)
-        } else {
-            // Timestamp not found, insert a new entry.
-            val insertionPoint = -(searchResult + 1)
-            timeNodes.add(insertionPoint, time to mutableListOf(obj))
+        withSpinLock {
+            val index = timeNodes.indexOfFirst { it.first == time }
+            if (index >= 0) {
+                timeNodes[index].second.add(obj)
+            } else {
+                val insertIndex = timeNodes.indexOfFirst { it.first > time }
+                if (insertIndex >= 0) {
+                    timeNodes.add(insertIndex, time to mutableListOf(obj))
+                } else {
+                    timeNodes.add(time to mutableListOf(obj))
+                }
+            }
         }
     }
 
     /** Remove the earliest list of T objects that are ready to be processed. */
     fun removeNextList(time: TimeStamp): List<T>? {
-        if (timeNodes.isNotEmpty() && timeNodes.first().first <= time) {
-            return timeNodes.removeAt(0).second
+        return withSpinLock {
+            if (timeNodes.isNotEmpty() && timeNodes.first().first <= time) {
+                timeNodes.removeAt(0).second
+            } else {
+                null
+            }
         }
-        return null
     }
 
     /** Remove the earliest T object that is ready to be processed. */
     fun removeNext(time: TimeStamp): T? {
-        if (timeNodes.isNotEmpty()) {
-            val (lowestTime, timeList) = timeNodes.first()
-            if (lowestTime <= time) {
-                val next = timeList.removeAt(0)
-                if (timeList.isEmpty()) {
-                    timeNodes.removeAt(0)
+        return withSpinLock {
+            if (timeNodes.isNotEmpty()) {
+                val (lowestTime, timeList) = timeNodes.first()
+                if (lowestTime <= time) {
+                    val next = timeList.removeAt(0)
+                    if (timeList.isEmpty()) {
+                        timeNodes.removeAt(0)
+                    }
+                    return@withSpinLock next
                 }
-                return next
             }
+            null
         }
-        return null
     }
 
     fun clear() {
-        timeNodes.clear()
+        withSpinLock { timeNodes.clear() }
     }
 
     /**
      * @return The time of the next event, or null if the queue is empty.
      */
     val nextTime: TimeStamp?
-        get() = timeNodes.firstOrNull()?.first
+        get() = withSpinLock { timeNodes.firstOrNull()?.first }
 }

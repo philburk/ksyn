@@ -63,6 +63,10 @@ class HomeScreen : Screen {
                 Button(
                     onClick = { navigator.push(PlayWhiteNoise()) }
                 ) { Text("Play WhiteNoise") }
+                
+                Button(
+                    onClick = { navigator.push(FilterLab()) }
+                ) { Text("Filter Lab") }
             }
         }
     }
