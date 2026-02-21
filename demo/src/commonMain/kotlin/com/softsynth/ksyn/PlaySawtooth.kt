@@ -50,12 +50,7 @@ private class SawtoothPlayer(private val frequency: Float): KSynPlayable {
 class PlaySawtooth private constructor(private val player: SawtoothPlayer) : StartStopScreen(
     playable = player,
     customContent = {
-        PortFader(
-            port = player.sawtooth.frequency,
-            minValue = 100.0f,
-            maxValue = 8000.0f,
-            isExponential = true
-        )
+        UnitGeneratorFaders(unitGenerator = player.sawtooth)
     }
 ) {
     constructor() : this(SawtoothPlayer(440.0f))
