@@ -64,47 +64,34 @@ class EnvelopeAttackDecay : UnitGate() {
         val amplitudes = amplitude.getValues()
         val outputs = output.getValues()
 
-        var i = 0
-        val limit = 8 // KSyn static block size
-        while (i < limit) {
+        for (i in 0 until Synthesizer.FRAMES_PER_BLOCK) {
+            val triggered = input.checkGate(i)
             when (state) {
                 State.IDLE -> {
-                    while (i < limit) {
-                        outputs[i] = level.toSample()
-                        if (input.checkGate(i)) {
-                            startAttack(i)
-                            break
-                        }
-                        i++
+                    outputs[i] = level.toSample()
+                    if (triggered) {
+                        startAttack(i)
                     }
                 }
                 State.ATTACKING -> {
-                    while (i < limit) {
-                        // Increment first so we can render fast attacks.
-                        level += increment
-                        if (level >= 1.0) {
-                            level = 1.0
-                            outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                            startDecay(i)
-                            break
-                        }
+                    // Increment first so we can render fast attacks.
+                    level += increment
+                    if (level >= 1.0) {
+                        level = 1.0
                         outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                        i++
+                        startDecay(i)
+                    } else {
+                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
                     }
                 }
                 State.DECAYING -> {
-                    while (i < limit) {
-                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                        level *= scaler
-                        if (input.checkGate(i)) {
-                            startAttack(i)
-                            break
-                        } else if (level < SynthesisEngine.DB90) {
-                            input.checkAutoDisable()
-                            startIdle()
-                            break
-                        }
-                        i++
+                    outputs[i] = (level * amplitudes[i].toDouble()).toSample()
+                    level *= scaler
+                    if (triggered) {
+                        startAttack(i)
+                    } else if (level < SynthesisEngine.DB90) {
+                        input.checkAutoDisable()
+                        startIdle()
                     }
                 }
             }
@@ -124,7 +111,7 @@ class EnvelopeAttackDecay : UnitGate() {
             startDecay(i)
         } else {
             // assume going from 0.0 to 1.0 even if retriggering
-            increment = synthesisEngine?.framePeriod ?: 0.0 / duration
+            increment = (synthesisEngine?.framePeriod ?: 0.0) / duration
             state = State.ATTACKING
         }
     }

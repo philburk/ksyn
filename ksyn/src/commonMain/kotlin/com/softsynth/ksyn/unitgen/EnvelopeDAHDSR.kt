@@ -74,119 +74,82 @@ class EnvelopeDAHDSR : UnitGate() {
         val amplitudes = amplitude.getValues()
         val outputs = output.getValues()
 
-        var i = 0
-        val limit = Synthesizer.FRAMES_PER_BLOCK
-        while (i < limit) {
+        for (i in 0 until Synthesizer.FRAMES_PER_BLOCK) {
             val triggered = input.checkGate(i)
             when (state) {
                 State.IDLE -> {
-                    while (i < limit) {
-                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                        if (triggered) {
-                            startDelay(i)
-                            break
-                        }
-                        i++
+                    outputs[i] = (level * amplitudes[i].toDouble()).toSample()
+                    if (triggered) {
+                        startDelay(i)
                     }
                 }
                 State.DELAYING -> {
-                    while (i < limit) {
-                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                        if (input.isOff) {
-                            startRelease(i)
-                            break
-                        } else {
-                            countdown -= 1
-                            if (countdown <= 0) {
-                                startAttack(i)
-                                break
-                            }
+                    outputs[i] = (level * amplitudes[i].toDouble()).toSample()
+                    if (input.isOff) {
+                        startRelease(i)
+                    } else {
+                        countdown -= 1
+                        if (countdown <= 0) {
+                            startAttack(i)
                         }
-                        i++
                     }
                 }
                 State.ATTACKING -> {
-                    while (i < limit) {
-                        // Increment first so we can render fast attacks.
-                        level += increment
-                        if (level >= 1.0) {
-                            level = 1.0
-                            outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                            startHold(i)
-                            break
-                        } else {
-                            outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                            if (input.isOff) {
-                                startRelease(i)
-                                break
-                            }
+                    // Increment first so we can render fast attacks.
+                    level += increment
+                    if (level >= 1.0) {
+                        level = 1.0
+                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
+                        startHold(i)
+                    } else {
+                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
+                        if (input.isOff) {
+                            startRelease(i)
                         }
-                        i++
                     }
                 }
                 State.HOLDING -> {
-                    while (i < limit) {
-                        outputs[i] = amplitudes[i] // level is 1.0
-                        countdown -= 1
-                        if (countdown <= 0) {
-                            startDecay(i)
-                            break
-                        } else if (input.isOff) {
-                            startRelease(i)
-                            break
-                        }
-                        i++
+                    outputs[i] = amplitudes[i] // level is 1.0
+                    countdown -= 1
+                    if (countdown <= 0) {
+                        startDecay(i)
+                    } else if (input.isOff) {
+                        startRelease(i)
                     }
                 }
                 State.DECAYING -> {
-                    while (i < limit) {
-                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                        level *= scaler // exponential decay
-                        if (triggered) {
-                            startDelay(i)
-                            break
-                        } else if (level < sustains[i].toDouble()) {
-                            level = sustains[i].toDouble()
-                            startSustain(i)
-                            break
-                        } else if (level < SynthesisEngine.DB96) {
-                            input.checkAutoDisable()
-                            startIdle()
-                            break
-                        } else if (input.isOff) {
-                            startRelease(i)
-                            break
-                        }
-                        i++
+                    outputs[i] = (level * amplitudes[i].toDouble()).toSample()
+                    level *= scaler // exponential decay
+                    if (triggered) {
+                        startDelay(i)
+                    } else if (level < sustains[i].toDouble()) {
+                        level = sustains[i].toDouble()
+                        startSustain(i)
+                    } else if (level < SynthesisEngine.DB96) {
+                        input.checkAutoDisable()
+                        startIdle()
+                    } else if (input.isOff) {
+                        startRelease(i)
                     }
                 }
                 State.SUSTAINING -> {
-                    while (i < limit) {
-                        level = sustains[i].toDouble()
-                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                        if (triggered) {
-                            startDelay(i)
-                            break
-                        } else if (input.isOff) {
-                            startRelease(i)
-                            break
-                        }
-                        i++
+                    level = sustains[i].toDouble()
+                    if (level < 0.0) level = 0.0
+                    outputs[i] = (level * amplitudes[i].toDouble()).toSample()
+                    if (triggered) {
+                        startDelay(i)
+                    } else if (input.isOff) {
+                        startRelease(i)
                     }
                 }
                 State.RELEASING -> {
-                    while (i < limit) {
-                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                        level *= scaler // exponential decay
-                        if (triggered) {
-                            startDelay(i)
-                            break
-                        } else if (level < SynthesisEngine.DB96) {
-                            input.checkAutoDisable()
-                            startIdle()
-                            break
-                        }
-                        i++
+                    outputs[i] = (level * amplitudes[i].toDouble()).toSample()
+                    level *= scaler // exponential decay
+                    if (triggered) {
+                        startDelay(i)
+                    } else if (level < SynthesisEngine.DB96) {
+                        input.checkAutoDisable()
+                        startIdle()
                     }
                 }
             }
