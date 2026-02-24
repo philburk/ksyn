@@ -86,7 +86,7 @@ fun PortFader(
         val displayValue = kotlin.math.round(currentValue * 100f) / 100f
         Text(
             text = displayValue.toString(),
-            modifier = Modifier.width(40.dp),
+            modifier = Modifier.width(60.dp),
             style = androidx.compose.material3.MaterialTheme.typography.bodySmall
         )
     }

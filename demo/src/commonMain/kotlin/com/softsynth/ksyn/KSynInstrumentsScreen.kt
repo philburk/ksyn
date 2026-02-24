@@ -11,6 +11,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
 import com.softsynth.ksyn.instruments.KSynInstrumentLibrary
 import com.softsynth.ksyn.unitgen.*
+import com.softsynth.ksyn.util.VoiceDescription
 
 class KSynInstrumentsPlayer : KSynPlayable {
     val ksynAudioBridge: KSynAudioBridge
@@ -20,11 +21,25 @@ class KSynInstrumentsPlayer : KSynPlayable {
     private val library = KSynInstrumentLibrary()
     
     // We instantiate one copy of each voice from the descriptions
-    val voices: List<Pair<String, UnitVoice>> = library.voiceDescriptions.map { desc ->
-        Pair(desc.name, desc.createUnitVoice())
+    val voices: List<Pair<VoiceDescription, UnitVoice>> = library.voiceDescriptions.map { desc ->
+        Pair(desc, desc.createUnitVoice())
     }
 
     var activeVoiceIndex by mutableStateOf(0)
+    
+    // Store the selected preset index for each voice so it isn't lost when switching instruments
+    val activePresetIndices = mutableStateListOf<Int>().apply {
+        repeat(voices.size) { add(0) }
+    }
+
+    var activePresetIndex: Int
+        get() = activePresetIndices[activeVoiceIndex]
+        set(value) {
+            activePresetIndices[activeVoiceIndex] = value
+        }
+
+    val activeVoiceDesc: VoiceDescription
+        get() = voices[activeVoiceIndex].first
 
     val activeVoice: UnitVoice
         get() = voices[activeVoiceIndex].second
@@ -119,35 +134,83 @@ class KSynInstrumentsScreen : Screen {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Voice Selection Menu
-                Text("Select Instrument", style = MaterialTheme.typography.titleMedium)
-                var voiceMenuExpanded by remember { mutableStateOf(false) }
-                
-                ExposedDropdownMenuBox(
-                    expanded = voiceMenuExpanded,
-                    onExpandedChange = { voiceMenuExpanded = !voiceMenuExpanded }
-                ) {
-                    TextField(
-                        readOnly = true,
-                        value = player.voices[player.activeVoiceIndex].first,
-                        onValueChange = {},
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = voiceMenuExpanded) },
-                        colors = ExposedDropdownMenuDefaults.textFieldColors(),
-                        modifier = Modifier.menuAnchor()
-                    )
-                    ExposedDropdownMenu(
-                        expanded = voiceMenuExpanded,
-                        onDismissRequest = { voiceMenuExpanded = false }
-                    ) {
-                        player.voices.forEachIndexed { index, pair ->
-                            DropdownMenuItem(
-                                text = { Text(pair.first) },
-                                onClick = {
-                                    player.activeVoiceIndex = index
-                                    player.updateRouting()
-                                    voiceMenuExpanded = false
-                                }
+                // Voice Selection Menus
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                    Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+                        Text("Select Instrument", style = MaterialTheme.typography.titleMedium)
+                        var voiceMenuExpanded by remember { mutableStateOf(false) }
+                        
+                        ExposedDropdownMenuBox(
+                            expanded = voiceMenuExpanded,
+                            onExpandedChange = { voiceMenuExpanded = !voiceMenuExpanded }
+                        ) {
+                            TextField(
+                                readOnly = true,
+                                value = player.activeVoiceDesc.name,
+                                onValueChange = {},
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = voiceMenuExpanded) },
+                                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
                             )
+                            ExposedDropdownMenu(
+                                expanded = voiceMenuExpanded,
+                                onDismissRequest = { voiceMenuExpanded = false }
+                            ) {
+                                player.voices.forEachIndexed { index, pair ->
+                                    DropdownMenuItem(
+                                        text = { Text(pair.first.name) },
+                                        onClick = {
+                                            player.activeVoiceIndex = index
+                                            // Do NOT reset player.activePresetIndex = 0 here. 
+                                            // We want to preserve the preset the instrument is already in.
+                                            player.updateRouting()
+                                            voiceMenuExpanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Column(modifier = Modifier.weight(1f).padding(start = 8.dp)) {
+                        Text("Select Preset", style = MaterialTheme.typography.titleMedium)
+                        var presetMenuExpanded by remember { mutableStateOf(false) }
+                        val presetNames = player.activeVoiceDesc.presetNames
+                        val currentPresetName = if (presetNames.isNotEmpty() && player.activePresetIndex < presetNames.size) {
+                            presetNames[player.activePresetIndex]
+                        } else {
+                            "Preset ${player.activePresetIndex}"
+                        }
+                        
+                        ExposedDropdownMenuBox(
+                            expanded = presetMenuExpanded,
+                            onExpandedChange = { presetMenuExpanded = !presetMenuExpanded }
+                        ) {
+                            TextField(
+                                readOnly = true,
+                                value = currentPresetName,
+                                onValueChange = {},
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = presetMenuExpanded) },
+                                colors = ExposedDropdownMenuDefaults.textFieldColors(),
+                                modifier = Modifier.menuAnchor().fillMaxWidth()
+                            )
+                            ExposedDropdownMenu(
+                                expanded = presetMenuExpanded,
+                                onDismissRequest = { presetMenuExpanded = false }
+                            ) {
+                                presetNames.forEachIndexed { index, name ->
+                                    DropdownMenuItem(
+                                        text = { Text(name) },
+                                        onClick = {
+                                            player.activePresetIndex = index
+                                            player.synth.queueCommand {
+                                                player.activeVoice.usePreset(index)
+                                            }
+                                            presetMenuExpanded = false
+                                        }
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -180,6 +243,7 @@ class KSynInstrumentsScreen : Screen {
                     if (activeGenerator != null) {
                         UnitGeneratorFaders(
                             unitGenerator = activeGenerator,
+                            presetKey = player.activePresetIndex,
                             modifier = Modifier.fillMaxSize()
                         )
                     }

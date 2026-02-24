@@ -15,6 +15,7 @@ import androidx.compose.runtime.key
 @Composable
 fun UnitGeneratorFaders(
     unitGenerator: UnitGenerator,
+    presetKey: Int = 0,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -29,8 +30,9 @@ fun UnitGeneratorFaders(
                 // Use exponential taper if the minimum bound is strictly greater than 0
                 val isExponential = minValue > 0f
                 
-                // Add the fader
-                key(unitGenerator, port.name) {
+                // Add the fader, and include presetKey so switching presets recreates the faders 
+                // and pulls initial values from the ports again.
+                key(unitGenerator, port.name, presetKey) {
                     PortFader(
                         port = port,
                         minValue = minValue,
