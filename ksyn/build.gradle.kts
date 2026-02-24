@@ -4,7 +4,11 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidKotlinMultiplatformLibrary)
     alias(libs.plugins.androidLint)
+    id("maven-publish")
 }
+
+group = "com.softsynth.ksyn"
+version = "1.0.0-SNAPSHOT"
 
 kotlin {
 
