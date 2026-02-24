@@ -42,7 +42,7 @@ abstract class UnitGenerator {
     // In Kotlin, MutableMap preserves insertion order (like LinkedHashMap)
     private val ports: MutableMap<String, UnitPort> = mutableMapOf()
 
-    var synthesisEngine: SynthesisEngine? = null
+    open var synthesisEngine: SynthesisEngine? = null
         get() = field
         set(value) {
             if (field != null && field !== value) {
@@ -56,7 +56,7 @@ abstract class UnitGenerator {
         private set
 
     private var lastFrameCount: Long = -1
-    var isEnabled: Boolean = true
+    open var isEnabled: Boolean = true
         set(value) {
             field = value
             if (!value) flattenOutputs()
@@ -83,7 +83,7 @@ abstract class UnitGenerator {
         ports[portName.lowercase()] = port
     }
 
-    fun getPortByName(portName: String): UnitPort? {
+    open fun getPortByName(portName: String): UnitPort? {
         return ports[portName.lowercase()]
     }
 
@@ -138,7 +138,7 @@ abstract class UnitGenerator {
     }
 
     /** Flatten output ports so we don't output a changing signal when stopped. */
-    fun flattenOutputs() {
+    open fun flattenOutputs() {
         for (port in ports.values) {
             if (port is UnitOutputPort) {
                 port.flatten()
@@ -146,7 +146,7 @@ abstract class UnitGenerator {
         }
     }
 
-    fun setCircuit(circuit: UnitGenerator) {
+    open fun setCircuit(circuit: UnitGenerator) {
         if (this.circuit != null && this.circuit !== circuit) {
             throw RuntimeException("Unit is already in a circuit.")
         }

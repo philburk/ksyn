@@ -127,6 +127,11 @@ class EnvelopeAttackDecay : UnitGate() {
         }
     }
 
+    fun export(circuit: Circuit, prefix: String) {
+        circuit.addPort(attack, prefix + attack.name)
+        circuit.addPort(decay, prefix + decay.name)
+    }
+
     companion object {
         const val THRESHOLD = 0.01
         private const val MIN_DURATION = 1.0 / 100000.0

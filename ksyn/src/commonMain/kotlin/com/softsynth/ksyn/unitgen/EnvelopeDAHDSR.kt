@@ -222,6 +222,13 @@ class EnvelopeDAHDSR : UnitGate() {
 
     /* UnitSource overrides handled by UnitGate */
 
+    fun export(circuit: Circuit, prefix: String) {
+        circuit.addPort(attack, prefix + attack.name)
+        circuit.addPort(decay, prefix + decay.name)
+        circuit.addPort(sustain, prefix + sustain.name)
+        circuit.addPort(release, prefix + release.name)
+    }
+
     companion object {
         private const val MIN_DURATION = 1.0 / 100000.0
     }
