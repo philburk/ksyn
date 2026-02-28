@@ -45,9 +45,9 @@ class FilterOneZero : UnitFilter() {
     private var x1: Double = 0.0
 
     init {
-        a0 = UnitVariablePort("A0", 0.5)
+        a0 = UnitVariablePort("A0", 0.5f)
         addPort(a0)
-        a1 = UnitVariablePort("A1", 0.5)
+        a1 = UnitVariablePort("A1", 0.5f)
         addPort(a1)
     }
 

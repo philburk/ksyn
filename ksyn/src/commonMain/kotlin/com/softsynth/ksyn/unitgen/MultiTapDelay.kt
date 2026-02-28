@@ -57,9 +57,9 @@ class MultiTapDelay(
         val inputs = input.getValues()
         val outputs = output.getValues()
 
-        val preDelayMS = preDelayMillis.getValues()[0].toDouble()
-        val frameRateLocal = synthesisEngine?.frameRate ?: 44100.0f
-        var preDelayFrames = (preDelayMS * 0.001 * frameRateLocal).toInt()
+        val preDelayMS = preDelayMillis.getValues()[0]
+        val frameRateLocal = synthesisEngine?.frameRate?.toFloat() ?: 44100.0f
+        var preDelayFrames = (preDelayMS * 0.001f * frameRateLocal).toInt()
         preDelayFrames = max(1, min(mMaxPreDelayFrames, preDelayFrames))
 
         for (i in 0 until Synthesizer.FRAMES_PER_BLOCK) {

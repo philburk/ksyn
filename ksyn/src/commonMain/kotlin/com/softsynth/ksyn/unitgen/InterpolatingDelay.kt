@@ -72,7 +72,7 @@ class InterpolatingDelay : UnitFilter() {
         val outputs = output.getValues()
         val delays = delay.getValues()
         
-        val frameRateLocal = synthesisEngine?.frameRate ?: 44100.0f
+        val frameRateLocal = (synthesisEngine?.frameRate ?: 44100.0).toFloat()
         
         var cur = cursor
         for (i in 0 until Synthesizer.FRAMES_PER_BLOCK) {
@@ -94,14 +94,14 @@ class InterpolatingDelay : UnitFilter() {
                 outputs[i] = buffer[cur]
             } else {
                 // Clip to maximum delay.
-                if (delayFrames >= numFrames) {
+                if (delayFrames >= numFrames.toFloat()) {
                     delayFrames = (numFrames - 1).toFloat()
                 }
 
                 // Calculate fractional index into delay buffer.
                 var readIndex = cur - delayFrames
                 if (readIndex < 0.0f) {
-                    readIndex += numFrames
+                    readIndex += numFrames.toFloat()
                 }
                 
                 // setup for interpolation.

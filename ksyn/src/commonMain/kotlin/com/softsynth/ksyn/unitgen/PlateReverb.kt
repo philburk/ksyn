@@ -256,7 +256,7 @@ class PlateReverb(size: Double = 1.0) : UnitGenerator() {
     }
 
     override fun generate() {
-        val frameRateLocal = synthesisEngine?.frameRate ?: 44100.0f
+        val frameRateLocal = (synthesisEngine?.frameRate ?: 44100.0).toFloat()
         mLeftSide.setFrequency(0.7f, frameRateLocal)
         mRightSide.setFrequency(1.2f, frameRateLocal)
         

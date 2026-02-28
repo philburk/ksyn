@@ -86,7 +86,7 @@ class PitchDetector : UnitGenerator() {
         val frequencies = frequency.getValues()
         val updateds = updated.getValues()
 
-        val frameRateLocal = synthesisEngine?.frameRate ?: 44100.0f
+        val frameRateLocal = synthesisEngine?.frameRate?.toFloat() ?: 44100.0f
         
         for (i in 0 until Synthesizer.FRAMES_PER_BLOCK) {
             val current = inputs[i].toDouble()

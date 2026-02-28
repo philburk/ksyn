@@ -43,9 +43,9 @@ class FilterOnePole : UnitFilter() {
     private var y1: Double = 0.0
 
     init {
-        a0 = UnitVariablePort("A0", 0.6)
+        a0 = UnitVariablePort("A0", 0.6f)
         addPort(a0)
-        b1 = UnitVariablePort("B1", -0.3)
+        b1 = UnitVariablePort("B1", -0.3f)
         addPort(b1)
     }
 

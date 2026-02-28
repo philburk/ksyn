@@ -57,8 +57,8 @@ open class MixerStereo(numInputs: Int) : MixerMono(numInputs) {
     }
 
     init {
-        pan = UnitInputPort(numInputs, "Pan", 0.0)
-        pan.setup(-1.0, 0.0, 1.0)
+        pan = UnitInputPort(numInputs, "Pan", 0.0f)
+        pan.setup(-1.0f, 0.0f, 1.0f)
         addPort(pan)
         panTrackers = Array(numInputs) { PanTracker() }
     }

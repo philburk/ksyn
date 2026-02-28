@@ -28,7 +28,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.input.key.utf16CodePoint
 import androidx.compose.ui.unit.dp
-import com.softsynth.ksyn.math.pitchToFrequency
+import com.softsynth.ksyn.math.AudioMath
 
 /**
  * TODO: The OS intercepts focus rendering this approach silent on target Desktop/Web builds.
@@ -81,7 +81,7 @@ fun AsciiKeyboard(
                         KeyEventType.KeyDown -> {
                             if (activeKeys.add(char)) {
                                 val pitch = index + 48.0
-                                val freq = pitchToFrequency(pitch)
+                                val freq = AudioMath.pitchToFrequency(pitch)
                                 lastPressedChar = char
                                 lastPitch = pitch
                                 lastFreq = freq

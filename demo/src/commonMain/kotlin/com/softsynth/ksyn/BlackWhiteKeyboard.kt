@@ -18,7 +18,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.softsynth.ksyn.math.pitchToFrequency
+import com.softsynth.ksyn.math.AudioMath
 
 /**
  * A visual 1-octave keyboard widget laid out like a real piano.
@@ -119,7 +119,7 @@ fun PianoKey(
             .pointerInput(index) {
                 detectTapGestures(
                     onPress = {
-                        val freq = pitchToFrequency(48.0 + index)
+                        val freq = AudioMath.pitchToFrequency(48.0 + index)
                         onNoteOn(freq)
                         tryAwaitRelease()
                         onNoteOff()

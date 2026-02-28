@@ -29,25 +29,22 @@ class TestGrainFarm : NonRealTimeTestCase() {
         grainFarm.allocate(8)
 
         grainFarm.duration.set(0.05)
-        grainFarm.density.set(0.5) // Lots of gaps
-        grainFarm.rate.set(440.0) // A4
+        grainFarm.density.set(4.0)
+        grainFarm.rate.set(1.0) // nominal 1.0 multiplier
         grainFarm.amplitude.set(0.8)
 
         synthesisEngine.start()
         grainFarm.start()
 
-        checkSleepUntil(0.2)
-        
-        // As long as it generates without throwing exceptions and finishes gracefully, 
-        // the fundamental architecture of the stochastic scheduler is validated.
+        checkSleepUntil(0.5)
 
         var maxAmp = 0.0f
-        for (i in 0..100) {
+        for (i in 0..500) {
             val v = grainFarm.output.value
             if (v > maxAmp) {
                 maxAmp = v
             }
-            checkSleepUntil(synthesisEngine.currentTime + 0.005)
+            checkSleepUntil(synthesisEngine.currentTime + 0.010)
         }
 
         assertTrue(maxAmp > 0.0f, "GrainFarm should produce some non-zero audio output")

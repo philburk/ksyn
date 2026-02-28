@@ -31,7 +31,12 @@ class TestVoiceAllocator {
 
     @BeforeTest
     fun beforeEach() {
-        voices = Array(max) { SubtractiveSynthVoice() }
+        val synth = com.softsynth.ksyn.engine.SynthesisEngine()
+        voices = Array<UnitVoice>(max) { 
+            val v = SubtractiveSynthVoice() 
+            synth.add(v)
+            v 
+        }
         allocator = VoiceAllocator(voices)
     }
 

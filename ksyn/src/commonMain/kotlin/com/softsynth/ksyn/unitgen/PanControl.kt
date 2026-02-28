@@ -43,7 +43,7 @@ class PanControl : UnitGenerator() {
     init {
         pan = UnitInputPort("Pan")
         addPort(pan)
-        output = UnitOutputPort(2, "Output", 0.0)
+        output = UnitOutputPort(2, "Output")
         addPort(output)
     }
 

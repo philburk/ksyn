@@ -57,7 +57,7 @@ class PeakFollower : UnitGenerator() {
         val inputs = input.getValues()
         val outputs = output.getValues()
         val currentHalfLife = halfLife.getValues()[0].toDouble()
-        var currentValue = current.getValue()
+        var currentValue = current.value
 
         if (currentHalfLife != previousHalfLife) {
             decayScalar = convertHalfLifeToMultiplier(currentHalfLife)
@@ -70,19 +70,19 @@ class PeakFollower : UnitGenerator() {
             val inputValue = abs(inputs[i])
 
             if (inputValue >= currentValue) {
-                currentValue = inputValue.toDouble()
+                currentValue = inputValue
             } else {
-                currentValue *= scalar
+                currentValue = (currentValue * scalar).toFloat()
             }
 
-            outputs[i] = currentValue.toFloat()
+            outputs[i] = currentValue
         }
 
         /*
          * When current gets close to zero, set current to zero to prevent FP underflow
          */
         if (currentValue < VERY_SMALL_FLOAT) {
-            currentValue = 0.0
+            currentValue = 0.0f
         }
 
         current.value = currentValue

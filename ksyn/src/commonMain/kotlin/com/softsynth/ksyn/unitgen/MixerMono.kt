@@ -28,7 +28,7 @@ import com.softsynth.ksyn.ports.UnitOutputPort
  * @see MixerStereo
  */
 open class MixerMono(numInputs: Int) : UnitGenerator(), UnitSink, UnitSource {
-    val input: UnitInputPort
+    final override var input: UnitInputPort
     /**
      * Linear gain for the corresponding input.
      */
@@ -42,9 +42,9 @@ open class MixerMono(numInputs: Int) : UnitGenerator(), UnitSink, UnitSource {
     init {
         input = UnitInputPort(numInputs, "Input")
         addPort(input)
-        gain = UnitInputPort(numInputs, "Gain", 1.0)
+        gain = UnitInputPort(numInputs, "Gain", 1.0f)
         addPort(gain)
-        amplitude = UnitInputPort("Amplitude", 1.0)
+        amplitude = UnitInputPort("Amplitude", 1.0f)
         addPort(amplitude)
         output = UnitOutputPort(numOutputs, "Output")
         addPort(output)
@@ -76,15 +76,7 @@ open class MixerMono(numInputs: Int) : UnitGenerator(), UnitSink, UnitSource {
     open val numOutputs: Int
         get() = 1
 
-    override fun getInputPort(): UnitInputPort {
-        return input
-    }
-
     override fun getOutputPort(): UnitOutputPort {
         return output
-    }
-    
-    override fun getUnitGenerator(): UnitGenerator {
-        return this
     }
 }
