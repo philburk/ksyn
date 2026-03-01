@@ -24,7 +24,9 @@ import com.softsynth.ksyn.util.PseudoRandom
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
 class StochasticGrainScheduler : GrainScheduler {
-    
+    val MIN_DENSITY = 0.00000001
+    val MIN_GAP_RANGE = 0.00000001
+
     val pseudoRandom = PseudoRandom()
 
     override fun nextDuration(suggestedDuration: Double): Double {
@@ -32,11 +34,9 @@ class StochasticGrainScheduler : GrainScheduler {
     }
 
     override fun nextGap(duration: Double, density: Double): Double {
-        var dens = density
-        if (dens < 0.00000001) {
-            dens = 0.00000001
-        }
-        val gapRange = duration * (1.0 - dens) / dens
+        val dens = if (density < MIN_DENSITY) MIN_DENSITY else density
+        val rawGap = duration * (1.0 - dens) / dens
+        val gapRange = rawGap.coerceAtLeast(MIN_GAP_RANGE)
         return pseudoRandom.nextRandomDouble() * gapRange
     }
 }

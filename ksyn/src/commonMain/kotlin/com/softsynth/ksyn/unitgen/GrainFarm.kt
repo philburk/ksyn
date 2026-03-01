@@ -42,13 +42,13 @@ import kotlin.math.pow
  */
 class GrainFarm : UnitGenerator(), UnitSource {
     /** A scaler for playback rate. Nominally 1.0. */
-    val rate = UnitInputPort("Rate", 1.0)
-    val rateRange = UnitInputPort("RateRange", 0.0)
-    val amplitude = UnitInputPort("Amplitude", 1.0)
-    val amplitudeRange = UnitInputPort("AmplitudeRange", 0.0)
-    val density = UnitInputPort("Density", 0.1)
-    val duration = UnitInputPort("Duration", 0.01)
-    val durationRange = UnitInputPort("DurationRange", 0.0)
+    val rate = UnitInputPort("Rate")
+    val rateRange = UnitInputPort("RateRange")
+    val amplitude = UnitInputPort("Amplitude")
+    val amplitudeRange = UnitInputPort("AmplitudeRange")
+    val density = UnitInputPort("Density")
+    val duration = UnitInputPort("Duration")
+    val durationRange = UnitInputPort("DurationRange")
     val output = UnitOutputPort("Output")
 
     private var states: Array<GrainState>? = null
@@ -57,14 +57,23 @@ class GrainFarm : UnitGenerator(), UnitSource {
     private val randomizer = PseudoRandom()
 
     init {
-        addPort(rate)
-        addPort(amplitude)
-        addPort(duration)
-        addPort(rateRange)
-        addPort(amplitudeRange)
-        addPort(durationRange)
         addPort(density)
+        addPort(rate)
+        addPort(rateRange)
+        addPort(duration)
+        addPort(durationRange)
+        addPort(amplitude)
+        addPort(amplitudeRange)
         addPort(output)
+
+        // Setup sensible default ranges for the KSyn fader UI mapping
+        rate.setup(0.1, 1.0, 8.0)
+        rateRange.setup(0.0, 0.1, 2.0)
+        amplitude.setup(0.0, 0.5, 1.0)
+        amplitudeRange.setup(0.0, 0.0, 1.0)
+        duration.setup(0.001, 0.005, 0.5)
+        durationRange.setup(0.0, 0.0, 0.3)
+        density.setup(0.001, 0.1, 1.0)
     }
 
     override fun getOutputPort() = output
@@ -87,7 +96,8 @@ class GrainFarm : UnitGenerator(), UnitSource {
             } else if (state == STATE_GAP) {
                 if (countdown > 0) {
                     countdown -= 1
-                } else if (countdown == 0) {
+                } 
+                if (countdown <= 0) {
                     state = STATE_RUNNING
                     grain.reset()
 

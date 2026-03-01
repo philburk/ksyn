@@ -61,7 +61,7 @@ class InterpolatingDelay : UnitFilter() {
     fun allocate(numFrames: Int) {
         this.numFrames = numFrames
         // Allocate extra frame for guard point to speed up interpolation.
-        buffer = java.util.Arrays.copyOf(buffer, numFrames + 1)
+        buffer = FloatArray(numFrames + 1)
         cursor = 0
     }
 

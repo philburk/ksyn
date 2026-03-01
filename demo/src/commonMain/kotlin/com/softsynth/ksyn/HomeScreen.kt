@@ -63,6 +63,9 @@ class HomeScreen : Screen {
                     onClick = { navigator.push(FilterLab()) }
                 ) { Text("Filter Lab") }
                 Button(
+                    onClick = { navigator.push(GrainFarmScreen()) }
+                ) { Text("Grain Farm Demo") }
+                Button(
                     onClick = { navigator.push(KSynInstrumentsScreen()) }
                 ) { Text("Instruments Library") }
             }

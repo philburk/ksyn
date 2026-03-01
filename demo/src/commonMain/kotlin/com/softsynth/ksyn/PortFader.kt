@@ -82,8 +82,8 @@ fun PortFader(
             modifier = Modifier.weight(1f).padding(horizontal = 8.dp)
         )
 
-        // Format to 2 decimal places for cleaner display
-        val displayValue = kotlin.math.round(currentValue * 100f) / 100f
+        // Format to 3 decimal places for cleaner display
+        val displayValue = kotlin.math.round(currentValue * 1000f) / 1000f
         Text(
             text = displayValue.toString(),
             modifier = Modifier.width(60.dp),

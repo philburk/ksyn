@@ -29,7 +29,7 @@ class TestGrainFarm : NonRealTimeTestCase() {
         grainFarm.allocate(8)
 
         grainFarm.duration.set(0.05)
-        grainFarm.density.set(4.0)
+        grainFarm.density.set(0.8)
         grainFarm.rate.set(1.0) // nominal 1.0 multiplier
         grainFarm.amplitude.set(0.8)
 

@@ -59,7 +59,7 @@ class TestDelay : NonRealTimeTestCase() {
             if (expected < 0.0) {
                 expected = 0.0
             }
-            TODO Fix this test.
+            // TODO Fix this test.
             // In original JSyn test, the assertion is commented out due to complex oscillator phase tracking! 
             // We ensure it executes bounds accurately without exception
             // assertEquals(expected, actual.toDouble(), 0.00001, "delayed output")
