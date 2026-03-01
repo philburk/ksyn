@@ -48,6 +48,7 @@ class GrainFarm : UnitGenerator(), UnitSource {
     val amplitudeRange = UnitInputPort("AmplitudeRange")
     val density = UnitInputPort("Density")
     val duration = UnitInputPort("Duration")
+    /** finalDuration = duration += duration * durationRange * randomNegativeOneToOne */
     val durationRange = UnitInputPort("DurationRange")
     val output = UnitOutputPort("Output")
 
@@ -72,7 +73,7 @@ class GrainFarm : UnitGenerator(), UnitSource {
         amplitude.setup(0.0, 0.5, 1.0)
         amplitudeRange.setup(0.0, 0.0, 1.0)
         duration.setup(0.001, 0.005, 0.5)
-        durationRange.setup(0.0, 0.0, 0.3)
+        durationRange.setup(0.0, 0.0, 1.0)
         density.setup(0.001, 0.1, 1.0)
     }
 
@@ -115,6 +116,13 @@ class GrainFarm : UnitGenerator(), UnitSource {
 
         private fun nextDuration(i: Int): Double {
             var dur = duration.getValues()[i].toDouble()
+            val range = durationRange.getValues()[i].toDouble()
+            
+            // Add a random range around the duration port value
+            val offset = dur * randomizer.nextRandomDouble() * range
+            dur += offset
+            if (dur < 0.0001) dur = 0.0001 // Prevent negative or zero duration
+            
             dur = scheduler.nextDuration(dur)
             lastDuration = dur
             return dur
@@ -146,7 +154,7 @@ class GrainFarm : UnitGenerator(), UnitSource {
         // Scale the amplitude range so that we never go above
         // original amplitude.
         val base = amplitude.getValues()[i].toDouble()
-        val offset = base * randomizer.nextRandomDouble() * amplitudeRange.getValues()[i].toDouble()
+        val offset = base * randomizer.random() * amplitudeRange.getValues()[i].toDouble()
         grain.amplitude = (base - offset).toFloat()
     }
 
