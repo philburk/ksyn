@@ -1,6 +1,5 @@
 package com.softsynth.ksyn.unitgen
 
-import com.softsynth.ksyn.engine.NonRealTimeTestCase
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -29,8 +28,8 @@ class TestRouting : NonRealTimeTestCase() {
         val outA = router.outputA.value
         val outB = router.outputB.value
 
-        assertEquals(osc1.output.value, outA, 0.001)
-        assertEquals(osc2.output.value, outB, 0.001)
+        assertEquals(osc1.output.value, outA, 0.001f)
+        assertEquals(osc2.output.value, outB, 0.001f)
     }
 
     @Test
@@ -56,8 +55,8 @@ class TestRouting : NonRealTimeTestCase() {
         val out0 = router.output.getValue(0)
         val out1 = router.output.getValue(1)
 
-        assertEquals(osc1.output.value, out0, 0.001)
-        assertEquals(osc2.output.value, out1, 0.001)
+        assertEquals(osc1.output.value, out0, 0.001f)
+        assertEquals(osc2.output.value, out1, 0.001f)
     }
 
     @Test
@@ -88,8 +87,8 @@ class TestRouting : NonRealTimeTestCase() {
         val out1 = router.output.getValue(1)
         val out2 = router.output.getValue(2)
 
-        assertEquals(osc1.output.value, out0, 0.001)
-        assertEquals(osc2.output.value, out1, 0.001)
-        assertEquals(osc3.output.value, out2, 0.001)
+        assertEquals(osc1.output.value, out0, 0.001f)
+        assertEquals(osc2.output.value, out1, 0.001f)
+        assertEquals(osc3.output.value, out2, 0.001f)
     }
 }

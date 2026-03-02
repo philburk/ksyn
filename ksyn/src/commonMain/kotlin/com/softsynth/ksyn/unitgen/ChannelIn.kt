@@ -41,17 +41,17 @@ class ChannelIn(channelIndex: Int = 0) : UnitGenerator() {
             try {
                 val buffer = engine.getInputBuffer(channelIndex)
                 for (i in 0 until outputs.size) {
-                    outputs[i] = buffer[i]
+                    outputs[i] = buffer[i].toFloat()
                 }
             } catch (e: Exception) {
                 // If audio input is not configured, output silence.
                 for (i in 0 until outputs.size) {
-                    outputs[i] = 0.0
+                    outputs[i] = 0.0f
                 }
             }
         } ?: run {
             for (i in 0 until outputs.size) {
-                outputs[i] = 0.0
+                outputs[i] = 0.0f
             }
         }
     }

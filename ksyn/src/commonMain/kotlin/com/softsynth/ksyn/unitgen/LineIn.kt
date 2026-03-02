@@ -42,19 +42,19 @@ class LineIn : UnitGenerator() {
                 val buffer0 = engine.getInputBuffer(0)
                 val buffer1 = engine.getInputBuffer(1)
                 for (i in 0 until outputs0.size) {
-                    outputs0[i] = buffer0[i]
-                    outputs1[i] = buffer1[i]
+                    outputs0[i] = buffer0[i].toFloat()
+                    outputs1[i] = buffer1[i].toFloat()
                 }
             } catch (e: Exception) {
                 for (i in 0 until outputs0.size) {
-                    outputs0[i] = 0.0
-                    outputs1[i] = 0.0
+                    outputs0[i] = 0.0f
+                    outputs1[i] = 0.0f
                 }
             }
         } ?: run {
             for (i in 0 until outputs0.size) {
-                outputs0[i] = 0.0
-                outputs1[i] = 0.0
+                outputs0[i] = 0.0f
+                outputs1[i] = 0.0f
             }
         }
     }

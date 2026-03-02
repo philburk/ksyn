@@ -16,6 +16,7 @@
 
 package com.softsynth.ksyn.unitgen
 
+import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.ports.UnitInputPort
 
 /**
@@ -54,7 +55,7 @@ class PhaseShifter(numStages: Int = 6) : UnitFilter() {
         ys = DoubleArray(numStages)
     }
 
-    override fun generate(start: Int, limit: Int) {
+    override fun generate() {
         val inputs = input.getValues()
         val outputs = output.getValues()
         val feedbacks = feedback.getValues()
@@ -62,7 +63,7 @@ class PhaseShifter(numStages: Int = 6) : UnitFilter() {
         val offsets = offset.getValues()
         var gain: Double
 
-        for (i in start until limit) {
+        for (i in 0 until Synthesizer.FRAMES_PER_BLOCK) {
             // Support audio rate modulation.
             val currentOffset = offsets[i]
 
@@ -81,7 +82,7 @@ class PhaseShifter(numStages: Int = 6) : UnitFilter() {
                 x = temp
             }
             zm1 = x
-            outputs[i] = inputs[i] + (x * depths[i])
+            outputs[i] = (inputs[i] + (x * depths[i])).toFloat()
         }
     }
 }

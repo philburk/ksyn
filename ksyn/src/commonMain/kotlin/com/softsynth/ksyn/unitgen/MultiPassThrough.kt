@@ -16,6 +16,7 @@
 
 package com.softsynth.ksyn.unitgen
 
+import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.ports.UnitOutputPort
 
@@ -29,8 +30,10 @@ import com.softsynth.ksyn.ports.UnitOutputPort
  * @author Phil Burk (C) 2016 Mobileer Inc
  */
 class MultiPassThrough(val numParts: Int = 2) : UnitGenerator(), UnitSink, UnitSource {
-    override val input: UnitInputPort
-    override val output: UnitOutputPort
+    override var input: UnitInputPort
+    var output: UnitOutputPort
+
+    override fun getOutputPort(): UnitOutputPort = output
 
     init {
         input = UnitInputPort(numParts, "Input")
@@ -45,7 +48,7 @@ class MultiPassThrough(val numParts: Int = 2) : UnitGenerator(), UnitSink, UnitS
             val inputs = input.getValues(partIndex)
             val outputs = output.getValues(partIndex)
 
-            for (i in 0 until outputs.size) {
+            for (i in 0 until Synthesizer.FRAMES_PER_BLOCK) {
                 outputs[i] = inputs[i]
             }
         }

@@ -1,6 +1,5 @@
 package com.softsynth.ksyn.unitgen
 
-import com.softsynth.ksyn.engine.NonRealTimeTestCase
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
@@ -27,6 +26,6 @@ class TestPhaseShifter : NonRealTimeTestCase() {
 
         // Ensure PhaseShifter is generating some output natively differing from 0.0
         val out = phaser.output.value
-        assertTrue(out != 0.0, "PhaseShifter should output non-zero values.")
+        assertTrue(out != 0.0f, "PhaseShifter should output non-zero values.")
     }
 }
