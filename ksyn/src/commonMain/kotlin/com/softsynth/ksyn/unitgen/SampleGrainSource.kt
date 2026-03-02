@@ -18,6 +18,7 @@ package com.softsynth.ksyn.unitgen
 
 import com.softsynth.ksyn.data.AudioSample
 import com.softsynth.ksyn.data.FloatSample
+import com.softsynth.ksyn.util.PseudoRandom
 
 /**
  * A GrainSource that plays a FloatSample. The position ranges from -1.0 to 1.0,
@@ -33,6 +34,7 @@ class SampleGrainSource : GrainCommon(), GrainSource {
     private var phase: Double = 0.0  // ranges from 0.0 to 1.0
     private var phaseIncrement: Double = 0.0
     private var numFramesGuarded: Int = 0
+    private val random = PseudoRandom()
 
     companion object {
         private const val MAX_PHASE = 0.9999999999
@@ -62,7 +64,7 @@ class SampleGrainSource : GrainCommon(), GrainSource {
     }
 
     override fun reset() {
-        val randomPosition = position + (positionRange * (Math.random() - 0.5))
+        val randomPosition = position + (positionRange * (random.nextRandomDouble() - 0.5))
         phase = (randomPosition * 0.5) + 0.5
         phase = phase.coerceIn(0.0, MAX_PHASE)
     }
