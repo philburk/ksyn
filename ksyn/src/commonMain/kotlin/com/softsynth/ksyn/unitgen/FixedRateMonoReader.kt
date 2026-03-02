@@ -29,12 +29,12 @@ class FixedRateMonoReader : SequentialDataReader() {
 
     init {
         output = UnitOutputPort()
-        addPort(output!!)
+        addPort(output)
     }
 
     override fun generate() {
         val amplitudes = amplitude.getValues()
-        val outputs = output!!.getValues()
+        val outputs = output.getValues()
 
         for (i in 0 until Synthesizer.FRAMES_PER_BLOCK) {
             if (dataQueue.hasMore()) {

@@ -28,14 +28,14 @@ import com.softsynth.ksyn.ports.UnitOutputPort
 class FixedRateStereoReader : SequentialDataReader() {
     init {
         output = UnitOutputPort(2, "Output")
-        addPort(output!!)
+        addPort(output)
         dataQueue.numChannels = 2
     }
 
     override fun generate() {
         val amplitudes = amplitude.getValues()
-        val output0s = output!!.getValues(0)
-        val output1s = output!!.getValues(1)
+        val output0s = output.getValues(0)
+        val output1s = output.getValues(1)
 
         for (i in 0 until Synthesizer.FRAMES_PER_BLOCK) {
             if (dataQueue.hasMore()) {
