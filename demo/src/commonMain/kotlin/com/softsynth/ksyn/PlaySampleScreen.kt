@@ -34,8 +34,8 @@ class PlaySamplePlayer : KSynPlayable {
         synth.add(sampleReader)
 
         // Connect the mono reader to both left and right outputs
-        sampleReader.output!!.connect(0, lineOut.input, 0)
-        sampleReader.output!!.connect(0, lineOut.input, 1)
+        sampleReader.output.connect(0, lineOut.input, 0)
+        sampleReader.output.connect(0, lineOut.input, 1)
 
         lineOut.start()
     }
@@ -59,7 +59,6 @@ class PlaySamplePlayer : KSynPlayable {
         currentRate = rateScaler
 
         synth.queueCommand {
-            // TODO investigate whether we are queueing commands twice. set() may also queue.
             sampleReader.rate.set(targetRate)
             sampleReader.dataQueue.queueOn(loadedSample)
         }

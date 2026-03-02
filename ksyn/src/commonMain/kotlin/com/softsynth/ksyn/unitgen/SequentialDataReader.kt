@@ -28,7 +28,7 @@ import com.softsynth.ksyn.ports.UnitOutputPort
 abstract class SequentialDataReader : UnitGenerator() {
     var dataQueue: UnitDataQueuePort
     var amplitude: UnitInputPort
-    var output: UnitOutputPort? = null
+    lateinit var output: UnitOutputPort
 
     init {
         dataQueue = UnitDataQueuePort("Data")
