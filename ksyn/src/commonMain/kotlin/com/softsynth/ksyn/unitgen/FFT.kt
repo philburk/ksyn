@@ -1,5 +1,5 @@
 /*
- * Copyright 2009 Phil Burk, Mobileer Inc
+ * Copyright 2013 Phil Burk, Mobileer Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
-package com.softsynth.ksyn.data
+package com.softsynth.ksyn.unitgen
 
-interface SpectralWindow {
-    fun get(index: Int): AudioSample
-    fun size(): Int
+/**
+ * Periodically transform the complex input signal using an FFT to a complex spectral stream.
+ * This is probably not as useful as SpectralFFT, which outputs complete spectra.
+ *
+ * @author Phil Burk (C) 2013 Mobileer Inc
+ * @see IFFT
+ * @see SpectralFFT
+ */
+class FFT : FFTBase() {
+    override fun getSign(): Int = 1 // 1 for FFT
 }

@@ -20,17 +20,18 @@ import com.softsynth.ksyn.data.SpectralWindow
 
 /**
  * Window that is just 1.0. Flat like a rectangle.
- * 
+ *
  * @author Phil Burk (C) 2013 Mobileer Inc
  */
 class RectangularWindow private constructor() : SpectralWindow {
 
     /** This always returns 1.0. Do not pass indices outside the window range. */
-    override fun get(index: Int): Double {
-        return 1.0 // impressive, eh?
-    }
+    override fun get(index: Int): Float = 1.0f
+
+    override fun size(): Int = Int.MAX_VALUE
 
     companion object {
-        val instance = RectangularWindow()
+        private val instance = RectangularWindow()
+        fun getInstance(): RectangularWindow = instance
     }
 }
