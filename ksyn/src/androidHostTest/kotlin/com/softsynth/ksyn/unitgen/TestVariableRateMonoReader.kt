@@ -29,17 +29,13 @@ class TestVariableRateMonoReader : NonRealTimeTestCase() {
         synthesisEngine.add(reader)
         synthesisEngine.add(pitchDetector)
 
-        // TODO: why is output nullable?
-        reader.output!!.connect(0, pitchDetector.input, 0)
+        reader.output.connect(0, pitchDetector.input, 0)
+
+        reader.rate.set(sample.frameRate)
+        reader.dataQueue.queueOn(sample)
 
         synthesisEngine.start()
-        reader.start()
-        pitchDetector.start()
-
-        synthesisEngine.queueCommand {
-            reader.rate.set(sample.frameRate)
-            reader.dataQueue.queueOn(sample)
-        }
+        pitchDetector.start() // start head of tree
 
         // Wait for enough cycles executing explicitly
         var conf = 0.0f
