@@ -42,7 +42,6 @@ To actually play sound from KSyn, you must use an Audio I/O library. For KMP dev
 Synthesizer synth = JSyn.createSynthesizer();
 LineOut lineOut = new LineOut();
 synth.add(lineOut);
-// JSyn automatically handled the threads and audio hardware
 synth.start();
 ```
 
@@ -50,19 +49,21 @@ synth.start();
 ```kotlin
 val synth = SynthesisEngine()
 val lineOut = LineOut()
-
-// Wire up your graph
 synth.add(lineOut)
 synth.start()
 ```
 
 #### Collecting Audio Output
 
-In JSyn, the default behavior was play the audio automatically.  In KSyn, you can use the audio output from KSyn in many different ways.  For example, you can hook KSyn's outputBuffer to your platform's audio callbacks. Or you can use the audio output from KSyn as input to another program.
+In JSyn, the default behavior was to play the audio automatically.  In KSyn, you can use the audio output from KSyn in many different ways.
+For example, you can hook KSyn's outputBuffer to your platform's audio callbacks.
+Or you can use the audio output from KSyn as input to another program or write it to a file.
 
 ```kotlin
 while(true) {
     val stereoBuffer = synth.renderBuffer()
+    // Output the audio using some blocking write.
+    if (myBlockingWrite(stereoBuffer) break;
 }
 ```
 
