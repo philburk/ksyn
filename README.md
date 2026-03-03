@@ -1,6 +1,6 @@
 This is a Kotlin Multiplatform project targeting Android, Web, Desktop (JVM).
 
-* [/composeApp](demo/src) is for code that will be shared across your Compose Multiplatform applications.
+* [/demo](demo/src) is for code that will be shared across your Compose Multiplatform applications.
   It contains several subfolders:
   - [commonMain](demo/src/commonMain/kotlin) is for code that’s common for all targets.
   - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
@@ -15,11 +15,11 @@ To build and run the development version of the Android app, use the run configu
 in your IDE’s toolbar or build it directly from the terminal:
 - on macOS/Linux
   ```shell
-  ./gradlew :composeApp:assembleDebug
+  ./gradlew :demo:assembleDebug
   ```
 - on Windows
   ```shell
-  .\gradlew.bat :composeApp:assembleDebug
+  .\gradlew.bat :demo:assembleDebug
   ```
 
 ### Build and Run Desktop (JVM) Application
@@ -28,11 +28,11 @@ To build and run the development version of the desktop app, use the run configu
 in your IDE’s toolbar or run it directly from the terminal:
 - on macOS/Linux
   ```shell
-  ./gradlew :composeApp:run
+  ./gradlew :demo:run
   ```
 - on Windows
   ```shell
-  .\gradlew.bat :composeApp:run
+  .\gradlew.bat :demo:run
   ```
 
 ### Build and Run Web Application
@@ -42,20 +42,20 @@ in your IDE's toolbar or run it directly from the terminal:
 - for the Wasm target (faster, modern browsers):
   - on macOS/Linux
     ```shell
-    ./gradlew :composeApp:wasmJsBrowserDevelopmentRun
+    ./gradlew :demo:wasmJsBrowserDevelopmentRun
     ```
   - on Windows
     ```shell
-    .\gradlew.bat :composeApp:wasmJsBrowserDevelopmentRun
+    .\gradlew.bat :demo:wasmJsBrowserDevelopmentRun
     ```
 - for the JS target (slower, supports older browsers):
   - on macOS/Linux
     ```shell
-    ./gradlew :composeApp:jsBrowserDevelopmentRun
+    ./gradlew :demo:jsBrowserDevelopmentRun
     ```
   - on Windows
     ```shell
-    .\gradlew.bat :composeApp:jsBrowserDevelopmentRun
+    .\gradlew.bat :demo:jsBrowserDevelopmentRun
     ```
 
 ---
