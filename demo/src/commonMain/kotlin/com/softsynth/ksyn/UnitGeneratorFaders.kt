@@ -21,8 +21,9 @@ fun UnitGeneratorFaders(
     Column(modifier = modifier) {
         // Retrieve all UnitPorts from the UnitGenerator
         for (port in unitGenerator.getPorts()) {
-            // Only generate faders for Input ports
-            if (port is UnitInputPort) {
+            // Only generate faders for unconnected Input ports.
+            // If a port is driven by another unit, setting it has no effect.
+            if (port is UnitInputPort && !port.isConnected()) {
                 // Minimum and Maximum properties are stored as AudioSamples, we cast them to Float
                 val minValue = port.minimum.toFloat()
                 val maxValue = port.maximum.toFloat()
