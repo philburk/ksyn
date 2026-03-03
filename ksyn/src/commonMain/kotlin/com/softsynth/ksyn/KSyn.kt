@@ -50,16 +50,11 @@ package com.softsynth.ksyn //import com.softsynth.engine.SynthesisEngine;
  * @author Phil Burk (C) 2010 Mobileer Inc
  */
 
-// Use a typealias so we can experiment with switching between Float and Double.
+// Use a typealias to identify data that is an audio signal.
 typealias AudioSample = Float
 typealias AudioBuffer = FloatArray
 @Suppress("NOTHING_TO_INLINE")
 inline fun Number.toSample(): AudioSample = this.toFloat()
-
-//typealias AudioSample = Double
-//typealias AudioBuffer = DoubleArray
-//@Suppress("NOTHING_TO_INLINE")
-//inline fun Number.toSample(): AudioSample = this.toDouble()
 
 object KSyn {
     // Update these for every release.
