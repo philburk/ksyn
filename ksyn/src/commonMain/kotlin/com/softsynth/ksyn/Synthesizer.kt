@@ -138,7 +138,7 @@ interface Synthesizer {
     // TODO @Throws(InterruptedException::class)
     suspend fun sleepFor(duration: Double)
 
-    suspend fun renderBuffer(): DoubleArray
+    suspend fun renderBuffer(): AudioBuffer
 
     /** Is JSyn running in real-time mode?  */
     /**

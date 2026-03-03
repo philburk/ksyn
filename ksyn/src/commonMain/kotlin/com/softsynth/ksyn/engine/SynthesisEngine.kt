@@ -16,6 +16,9 @@
 
 package com.softsynth.ksyn.engine
 
+import com.softsynth.ksyn.AudioBuffer
+import com.softsynth.ksyn.AudioSample
+import com.softsynth.ksyn.toSample
 import com.softsynth.ksyn.KSyn
 import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.shared.time.ScheduledQueue
@@ -115,7 +118,7 @@ class SynthesisEngine() : Synthesizer {
     fun terminate() {}
 
     inner class InterleavingBuffer(framesPerBuffer: Int, framesPerBlock: Int, val samplesPerFrame: Int) {
-        val interleavedBuffer = DoubleArray(framesPerBuffer * samplesPerFrame)
+        val interleavedBuffer = AudioBuffer(framesPerBuffer * samplesPerFrame)
         private val blockBuffers = Array(samplesPerFrame) { ChannelBlockBuffer(framesPerBlock) }
 
         fun deinterleave(inIndex: Int): Int {
@@ -138,7 +141,7 @@ class SynthesisEngine() : Synthesizer {
             return currentOutIndex
         }
 
-        fun getChannelBuffer(i: Int): DoubleArray = blockBuffers[i].values
+        fun getChannelBuffer(i: Int): AudioBuffer = blockBuffers[i].values
 
         fun clear() {
             blockBuffers.forEach { it.clear() }
@@ -146,10 +149,10 @@ class SynthesisEngine() : Synthesizer {
     }
 
     class ChannelBlockBuffer(framesPerBlock: Int) {
-        val values = DoubleArray(framesPerBlock)
+        val values = AudioBuffer(framesPerBlock)
 
         fun clear() {
-            values.fill(0.0)
+            values.fill(0.0.toSample())
         }
     }
 
@@ -309,17 +312,17 @@ class SynthesisEngine() : Synthesizer {
         }
     }
 
-    fun getInputBuffer(i: Int): DoubleArray {
+    fun getInputBuffer(i: Int): AudioBuffer {
         return inputBuffer?.getChannelBuffer(i)
             ?: throw RuntimeException("Audio Input not configured in start() method.")
     }
 
-    fun getOutputBuffer(i: Int): DoubleArray {
+    fun getOutputBuffer(i: Int): AudioBuffer {
         return outputBuffer?.getChannelBuffer(i)
             ?: throw RuntimeException("Audio Output not configured in start() method.")
     }
 
-    fun getInterleavedBuffer(): DoubleArray {
+    fun getInterleavedBuffer(): AudioBuffer {
         return outputBuffer?.interleavedBuffer
             ?: throw RuntimeException("Audio Output not configured in start() method.")
     }
@@ -427,7 +430,7 @@ class SynthesisEngine() : Synthesizer {
         sleepUntil(currentTime + duration)
     }
 
-    override suspend fun renderBuffer(): DoubleArray {
+    override suspend fun renderBuffer(): AudioBuffer {
         generateNextBuffer()
         return getInterleavedBuffer()
     }

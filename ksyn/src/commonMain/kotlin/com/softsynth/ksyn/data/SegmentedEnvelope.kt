@@ -140,6 +140,7 @@ class SegmentedEnvelope(maxFrames: Int) : SequentialDataCommon() {
         }
     }
 
+    // TODO review rate vs period. Maybe rename this method to getScaledRate()? What does this really do?
     override fun getRateScaler(index: Int, synthesisPeriod: Double): Double {
         var duration = buffer[index * 2].toDouble()
         if (duration < synthesisPeriod) {
