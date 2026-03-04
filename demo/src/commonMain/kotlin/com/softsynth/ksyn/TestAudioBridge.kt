@@ -36,16 +36,9 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
-import kotlin.collections.minusAssign
-import kotlin.collections.plusAssign
-import kotlin.compareTo
 import kotlin.math.PI
 import kotlin.math.min
 import kotlin.math.sin

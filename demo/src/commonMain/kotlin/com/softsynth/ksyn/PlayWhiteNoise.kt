@@ -18,10 +18,9 @@ package com.softsynth.ksyn
 
 import com.mobileer.audiobridge.AudioResult
 import com.softsynth.ksyn.unitgen.LineOut
-import com.softsynth.ksyn.unitgen.SawtoothOscillator
 import com.softsynth.ksyn.unitgen.WhiteNoise
 
-private class WhiteNoisePlayer(): KSynPlayable {
+private class WhiteNoisePlayer(): KSynPlayable() {
     var ksynAudioBridge: KSynAudioBridge
     val noise = WhiteNoise()
     val lineOut = LineOut()
@@ -47,4 +46,4 @@ private class WhiteNoisePlayer(): KSynPlayable {
 }
 
 
-class PlayWhiteNoise() : AutoStartScreen(WhiteNoisePlayer(), title = "Go Back")
+class PlayWhiteNoise() : AutoStartScreen(WhiteNoisePlayer(), title = "WhiteNoise - random values")

@@ -16,26 +16,14 @@
 
 package com.softsynth.ksyn
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
 import com.softsynth.ksyn.unitgen.LineOut
-import com.softsynth.ksyn.unitgen.SawtoothOscillator
+import com.softsynth.ksyn.unitgen.SawtoothOscillatorBL
+import com.softsynth.ksyn.unitgen.UnitGenerator
 
-internal class SawtoothPlayer(private val frequency: Float): KSynPlayable {
+internal class SawtoothPlayer(private val frequency: Float): KSynPlayable() {
     var ksynAudioBridge: KSynAudioBridge
-    val sawtooth = SawtoothOscillator()
+    val sawtooth = SawtoothOscillatorBL()
     val lineOut = LineOut()
 
     init {
@@ -57,36 +45,11 @@ internal class SawtoothPlayer(private val frequency: Float): KSynPlayable {
     override fun stop() {
         ksynAudioBridge.stop()
     }
-}
 
-
-class PlaySawtooth : Screen {
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        val player = remember { SawtoothPlayer(440.0f) }
-
-        Scaffold { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                Button(onClick = { navigator.pop() }) {
-                    Text("Go Back")
-                }
-                UnitGeneratorFaders(unitGenerator = player.sawtooth)
-            }
-        }
-
-        DisposableEffect(Unit) {
-            val result = player.start()
-            if (result != AudioResult.OK) {
-                println("Failed to open audio bridge: $result")
-            }
-            onDispose {
-                player.stop()
-            }
-        }
+    override fun getUnitGenerator(): UnitGenerator {
+        return sawtooth
     }
 }
+
+class PlaySawtooth() : AutoStartScreen(SawtoothPlayer(440.0f),
+    title = "SawtoothOscillator - basic waveform")

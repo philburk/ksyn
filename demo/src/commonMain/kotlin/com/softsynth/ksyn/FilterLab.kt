@@ -1,17 +1,59 @@
 package com.softsynth.ksyn
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
-import com.softsynth.ksyn.unitgen.*
+import com.softsynth.ksyn.unitgen.FilterBandPass
+import com.softsynth.ksyn.unitgen.FilterBandStop
+import com.softsynth.ksyn.unitgen.FilterFourPoles
+import com.softsynth.ksyn.unitgen.FilterHighPass
+import com.softsynth.ksyn.unitgen.FilterLowPass
+import com.softsynth.ksyn.unitgen.FilterPeakingEQ
+import com.softsynth.ksyn.unitgen.FilterStateVariable
+import com.softsynth.ksyn.unitgen.ImpulseOscillator
+import com.softsynth.ksyn.unitgen.LineOut
+import com.softsynth.ksyn.unitgen.MorphingOscillatorBL
+import com.softsynth.ksyn.unitgen.PassThrough
+import com.softsynth.ksyn.unitgen.PulseOscillator
+import com.softsynth.ksyn.unitgen.PulseOscillatorBL
+import com.softsynth.ksyn.unitgen.RedNoise
+import com.softsynth.ksyn.unitgen.SawtoothOscillator
+import com.softsynth.ksyn.unitgen.SawtoothOscillatorBL
+import com.softsynth.ksyn.unitgen.SawtoothOscillatorDPW
+import com.softsynth.ksyn.unitgen.SineOscillator
+import com.softsynth.ksyn.unitgen.SquareOscillator
+import com.softsynth.ksyn.unitgen.SquareOscillatorBL
+import com.softsynth.ksyn.unitgen.TriangleOscillator
+import com.softsynth.ksyn.unitgen.UnitFilter
+import com.softsynth.ksyn.unitgen.UnitGenerator
+import com.softsynth.ksyn.unitgen.UnitSource
+import com.softsynth.ksyn.unitgen.WhiteNoise
 
-class FilterLabPlayer : KSynPlayable {
+class FilterLabPlayer : KSynPlayable() {
     val ksynAudioBridge: KSynAudioBridge
     val synth = KSyn.createSynthesizer()
     val lineOut = LineOut()

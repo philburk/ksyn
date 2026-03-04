@@ -16,8 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.softsynth.ksyn.ports.UnitInputPort
-import kotlin.math.ln
 import kotlin.math.exp
+import kotlin.math.ln
 
 /**
  * A general-purpose fader (slider) that can control a UnitInputPort.

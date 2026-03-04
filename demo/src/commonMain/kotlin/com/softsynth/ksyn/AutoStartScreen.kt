@@ -15,8 +15,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 
 open class AutoStartScreen(
     val playable: KSynPlayable,
-    val title: String = "Go Back",
-    val customContent: @Composable () -> Unit = {}
+    val title: String = "Use faders to adjust sound."
 ) : Screen {
 
     @Composable
@@ -34,10 +33,14 @@ open class AutoStartScreen(
                         navigator.pop()
                     }
                 ) {
-                    Text(title)
+                    Text("Go Back")
                 }
 
-                customContent()
+                Text(title)
+                val unitGenerator = playable.getUnitGenerator()
+                if (unitGenerator != null) {
+                    UnitGeneratorFaders(unitGenerator = unitGenerator)
+                }
             }
 
             DisposableEffect(Unit) {

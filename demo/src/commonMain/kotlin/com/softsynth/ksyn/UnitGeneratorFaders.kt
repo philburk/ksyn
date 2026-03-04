@@ -2,11 +2,10 @@ package com.softsynth.ksyn
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.key
 import androidx.compose.ui.Modifier
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.unitgen.UnitGenerator
-
-import androidx.compose.runtime.key
 
 /**
  * A generic Composable that inspects a UnitGenerator and automatically

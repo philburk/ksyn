@@ -16,24 +16,12 @@
 
 package com.softsynth.ksyn
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import cafe.adriel.voyager.core.screen.Screen
-import cafe.adriel.voyager.navigator.LocalNavigator
-import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
 import com.softsynth.ksyn.unitgen.GrainFarm
 import com.softsynth.ksyn.unitgen.LineOut
+import com.softsynth.ksyn.unitgen.UnitGenerator
 
-private class GrainFarmDemoPlayer() : KSynPlayable {
+private class GrainFarmDemoPlayer() : KSynPlayable() {
     var ksynAudioBridge: KSynAudioBridge
     val grainFarm = GrainFarm()
     val lineOut = LineOut()
@@ -59,35 +47,11 @@ private class GrainFarmDemoPlayer() : KSynPlayable {
     override fun stop() {
         ksynAudioBridge.stop()
     }
-}
 
-class GrainFarmScreen : Screen {
-    @Composable
-    override fun Content() {
-        val navigator = LocalNavigator.currentOrThrow
-        val player = remember { GrainFarmDemoPlayer() }
-
-        Scaffold { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-            ) {
-                Button(onClick = { navigator.pop() }) {
-                    Text("Go Back")
-                }
-                UnitGeneratorFaders(unitGenerator = player.grainFarm)
-            }
-        }
-
-        DisposableEffect(Unit) {
-            val result = player.start()
-            if (result != AudioResult.OK) {
-                println("Failed to open audio bridge: $result")
-            }
-            onDispose {
-                player.stop()
-            }
-        }
+    override fun getUnitGenerator(): UnitGenerator {
+        return grainFarm
     }
 }
+
+class GrainFarmScreen() : AutoStartScreen(GrainFarmDemoPlayer(),
+    title = "GrainFarm - granular synthesis using small bits of sine waves")

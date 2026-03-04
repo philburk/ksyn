@@ -18,7 +18,8 @@ package com.softsynth.ksyn
 
 // IMPORTS: These look like Android, but they are the Multiplatform versions
 // provided by the JetBrains Compose Multiplatform Gradle plugin.
-import androidx.compose.foundation.layout.Box
+
+// IMPORTS: Voyager (Multiplatform Navigation)
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -26,10 +27,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
-// IMPORTS: Voyager (Multiplatform Navigation)
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
