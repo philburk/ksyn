@@ -47,7 +47,7 @@ synth.start();
 
 #### KSyn Example
 ```kotlin
-val synth = SynthesisEngine()
+val synth = KSyn.createSynthesizer()
 val lineOut = LineOut()
 synth.add(lineOut)
 synth.start()
@@ -84,7 +84,7 @@ If you need a `PortFader` equivalent in KSyn, look at the `demo/src/commonMain/k
 **In KSyn**: Standard blocking synchronization is completely incompatible with the WASM target (which halts the UI/Main thread and crashes Web browsers when forced to block). As a result:
 - KSyn uses single-producer, single-consumer lock-free ring-buffers utilizing `@Volatile` pointers for its data flows.
 - Wait mechanism queues use KMP-safe spin-locks (`while(!lock.tryLock()) {}`) around Kotlin Coroutine `Mutex`es, or spin directly on the `Volatile` indices.
-- Standard synthesis flow is entirely synchronous; `SynthesisEngine.queueCommand` places configuration events into a scheduled queue that the active audio thread executes immediately prior to the next block boundary, avoiding threading deadlocks.
+- Standard synthesis flow is entirely synchronous; `Synthesizer.queueCommand` places configuration events into a scheduled queue that the active audio thread executes immediately prior to the next block boundary, avoiding threading deadlocks.
 
 ### 6. Multiplatform Techniques for Assets (Loading Samples)
 
