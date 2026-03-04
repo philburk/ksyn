@@ -16,7 +16,7 @@
 
 package com.softsynth.ksyn.instruments
 
-import com.softsynth.ksyn.math.AudioMath.semitonesToFrequencyScaler
+import com.softsynth.math.AudioMath.semitonesToFrequencyScaler
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.ports.UnitOutputPort
 import com.softsynth.ksyn.shared.time.TimeStamp

@@ -2,7 +2,7 @@ package com.softsynth.ksyn.unitgen
 
 import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.util.SampleLoader
-import com.softsynth.ksyn.math.AudioMath
+import com.softsynth.math.AudioMath
 import com.softsynth.ksyn.shared.time.TimeStamp
 import kotlinx.coroutines.runBlocking
 import java.io.File

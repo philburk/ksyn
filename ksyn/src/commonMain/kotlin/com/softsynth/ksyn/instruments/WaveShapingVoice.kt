@@ -17,8 +17,8 @@
 package com.softsynth.ksyn.instruments
 
 import com.softsynth.ksyn.data.DoubleTable
-import com.softsynth.ksyn.math.PolynomialTableData
-import com.softsynth.ksyn.math.T
+import com.softsynth.math.PolynomialTableData
+import com.softsynth.math.T
 import com.softsynth.ksyn.ports.UnitFunctionPort
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.ports.UnitOutputPort

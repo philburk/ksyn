@@ -19,7 +19,7 @@ package com.softsynth.ksyn.unitgen
 import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.data.Spectrum
 import com.softsynth.ksyn.data.SpectralWindow
-import com.softsynth.ksyn.math.ifft
+import com.softsynth.math.ifft
 import com.softsynth.ksyn.ports.UnitOutputPort
 import com.softsynth.ksyn.ports.UnitSpectralInputPort
 

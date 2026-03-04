@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.softsynth.ksyn.math
+package com.softsynth.math
 
 /**
  * ChebyshevPolynomial<br>

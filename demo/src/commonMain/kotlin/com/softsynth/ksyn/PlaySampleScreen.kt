@@ -24,7 +24,7 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
 import com.softsynth.ksyn.data.FloatSample
-import com.softsynth.ksyn.math.AudioMath
+import com.softsynth.math.AudioMath
 import com.softsynth.ksyn.unitgen.LineOut
 import com.softsynth.ksyn.unitgen.VariableRateMonoReader
 import com.softsynth.ksyn.util.SampleLoader

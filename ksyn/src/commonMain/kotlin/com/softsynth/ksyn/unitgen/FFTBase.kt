@@ -19,7 +19,7 @@ package com.softsynth.ksyn.unitgen
 import com.softsynth.ksyn.AudioBuffer
 import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.data.Spectrum
-import com.softsynth.ksyn.math.transform
+import com.softsynth.math.transform
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.ports.UnitOutputPort
 

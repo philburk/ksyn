@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.softsynth.ksyn.math
+package com.softsynth.math
 
 /**
  * Tool for factoring primes and prime ratios. This class contains a static array of primes

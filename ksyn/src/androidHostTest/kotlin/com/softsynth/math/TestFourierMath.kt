@@ -1,4 +1,4 @@
-package com.softsynth.ksyn.math
+package com.softsynth.math
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

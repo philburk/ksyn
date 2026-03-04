@@ -16,7 +16,7 @@
 
 package com.softsynth.ksyn.unitgen
 
-import com.softsynth.ksyn.math.AudioMath
+import com.softsynth.math.AudioMath
 
 class PitchToFrequency : PowerOfTwo() {
 
