@@ -108,6 +108,10 @@ class FilterLab : Screen {
         val player = remember { FilterLabPlayer() }
         var isPlaying by remember { mutableStateOf(false) }
 
+        LaunchedEffect(Unit) {
+            if (player.start() == AudioResult.OK) isPlaying = true
+        }
+
         Scaffold { innerPadding ->
             Column(
                 modifier = Modifier
@@ -120,25 +124,6 @@ class FilterLab : Screen {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    Button(
-                        onClick = {
-                            if (player.start() == AudioResult.OK) isPlaying = true
-                        },
-                        enabled = !isPlaying
-                    ) { Text("START") }
-
-                    Button(
-                        onClick = {
-                            player.stop()
-                            isPlaying = false
-                        },
-                        enabled = isPlaying
-                    ) { Text("STOP") }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
 
                 // Source Selection
                 Text("Source", style = MaterialTheme.typography.titleMedium)

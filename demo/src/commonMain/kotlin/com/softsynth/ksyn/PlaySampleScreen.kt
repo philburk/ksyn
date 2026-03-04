@@ -90,6 +90,7 @@ class PlaySampleScreen : Screen {
 
         LaunchedEffect(Unit) {
             player.loadSample()
+            if (player.start() == AudioResult.OK) isPlaying = true
         }
 
         Scaffold { innerPadding ->
@@ -104,25 +105,6 @@ class PlaySampleScreen : Screen {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    Button(
-                        onClick = {
-                            if (player.start() == AudioResult.OK) isPlaying = true
-                        },
-                        enabled = !isPlaying && player.isLoaded
-                    ) { Text(if (player.isLoaded) "START AUDIO" else "LOADING SAMPLE...") }
-
-                    Button(
-                        onClick = {
-                            player.stop()
-                            isPlaying = false
-                        },
-                        enabled = isPlaying
-                    ) { Text("STOP AUDIO") }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
                 
                 Text("Clarinet.wav (Native Compose Resources Decoder)", style = MaterialTheme.typography.titleMedium)
                 Text("Playback Rate Scaler: ${kotlin.math.round(player.currentRate * 1000) / 1000.0}x", color = MaterialTheme.colorScheme.primary)

@@ -16,11 +16,24 @@
 
 package com.softsynth.ksyn
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import cafe.adriel.voyager.core.screen.Screen
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
 import com.softsynth.ksyn.unitgen.LineOut
 import com.softsynth.ksyn.unitgen.SawtoothOscillator
 
-private class SawtoothPlayer(private val frequency: Float): KSynPlayable {
+internal class SawtoothPlayer(private val frequency: Float): KSynPlayable {
     var ksynAudioBridge: KSynAudioBridge
     val sawtooth = SawtoothOscillator()
     val lineOut = LineOut()
@@ -47,11 +60,33 @@ private class SawtoothPlayer(private val frequency: Float): KSynPlayable {
 }
 
 
-class PlaySawtooth private constructor(private val player: SawtoothPlayer) : StartStopScreen(
-    playable = player,
-    customContent = {
-        UnitGeneratorFaders(unitGenerator = player.sawtooth)
+class PlaySawtooth : Screen {
+    @Composable
+    override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
+        val player = remember { SawtoothPlayer(440.0f) }
+
+        Scaffold { innerPadding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                Button(onClick = { navigator.pop() }) {
+                    Text("Go Back")
+                }
+                UnitGeneratorFaders(unitGenerator = player.sawtooth)
+            }
+        }
+
+        DisposableEffect(Unit) {
+            val result = player.start()
+            if (result != AudioResult.OK) {
+                println("Failed to open audio bridge: $result")
+            }
+            onDispose {
+                player.stop()
+            }
+        }
     }
-) {
-    constructor() : this(SawtoothPlayer(440.0f))
 }

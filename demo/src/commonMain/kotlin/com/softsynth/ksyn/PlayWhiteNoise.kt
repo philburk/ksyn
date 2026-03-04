@@ -47,4 +47,4 @@ private class WhiteNoisePlayer(): KSynPlayable {
 }
 
 
-class PlayWhiteNoise() : StartStopScreen(WhiteNoisePlayer())
+class PlayWhiteNoise() : AutoStartScreen(WhiteNoisePlayer(), title = "Go Back")

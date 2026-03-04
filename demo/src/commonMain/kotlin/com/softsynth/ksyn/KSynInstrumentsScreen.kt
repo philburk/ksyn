@@ -102,6 +102,10 @@ class KSynInstrumentsScreen : Screen {
         val player = remember { KSynInstrumentsPlayer() }
         var isPlaying by remember { mutableStateOf(false) }
 
+        LaunchedEffect(Unit) {
+            if (player.start() == AudioResult.OK) isPlaying = true
+        }
+
         Scaffold { innerPadding ->
             Column(
                 modifier = Modifier
@@ -114,25 +118,6 @@ class KSynInstrumentsScreen : Screen {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
-                    Button(
-                        onClick = {
-                            if (player.start() == AudioResult.OK) isPlaying = true
-                        },
-                        enabled = !isPlaying
-                    ) { Text("START AUDIO") }
-
-                    Button(
-                        onClick = {
-                            player.stop()
-                            isPlaying = false
-                        },
-                        enabled = isPlaying
-                    ) { Text("STOP AUDIO") }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
 
                 // Voice Selection Menus
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
