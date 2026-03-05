@@ -69,6 +69,10 @@ class HomeScreen : Screen {
                 Button(
                     onClick = { navigator.push(KSynInstrumentsScreen()) }
                 ) { Text("Instruments Library") }
+                
+                Button(
+                    onClick = { navigator.push(ChebyshevSongScreen()) }
+                ) { Text("Chebyshev Song") }
             }
         }
     }
