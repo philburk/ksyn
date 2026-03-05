@@ -415,10 +415,11 @@ class SynthesisEngine() : Synthesizer {
         var timeToSleep = time - currentTime
         while (timeToSleep > 0.0) {
             if (isRealTime) {
-                val msecToSleep = (1000 * timeToSleep).toLong()
-                if (msecToSleep > 0) {
-                    kotlinx.coroutines.delay(msecToSleep)
+                var msecToSleep = (1000 * timeToSleep).toLong()
+                if (msecToSleep <= 0L) {
+                    msecToSleep = 1L
                 }
+                kotlinx.coroutines.delay(msecToSleep)
             } else {
                 generateNextBuffer()
             }
