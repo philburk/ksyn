@@ -54,6 +54,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(project(":ksyn"))
+            implementation(project(":ksyn-compose"))
             implementation("com.mobileer:audio-bridge:0.1.0")
 
             // 1. The Core (Required): Basic navigation (Stack, push/pop)

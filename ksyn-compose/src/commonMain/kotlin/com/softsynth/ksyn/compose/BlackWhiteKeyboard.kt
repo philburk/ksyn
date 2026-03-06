@@ -1,4 +1,4 @@
-package com.softsynth.ksyn
+package com.softsynth.ksyn.compose
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,9 +14,9 @@ import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,13 +26,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.softsynth.math.AudioMath
+import kotlin.math.round
 
 /**
  * A visual 1-octave keyboard widget laid out like a real piano.
  */
 @Composable
 fun BlackWhiteKeyboard(
-    modifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.Companion,
     onNoteOn: (frequency: Double) -> Unit,
     onNoteOff: () -> Unit
 ) {
@@ -44,7 +45,7 @@ fun BlackWhiteKeyboard(
         Pair("C", 0), Pair("D", 2), Pair("E", 4), Pair("F", 5),
         Pair("G", 7), Pair("A", 9), Pair("B", 11), Pair("C", 12)
     )
-    
+
     // Black keys (note, index, and which white key it follows, 1-indexed)
     val blackKeys = listOf(
         Triple("C#", 1, 1), Triple("D#", 3, 2),
@@ -56,16 +57,16 @@ fun BlackWhiteKeyboard(
 
     Column(
         modifier = modifier.fillMaxWidth().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.Companion.CenterHorizontally
     ) {
-        val freqStr = if (lastFreq > 0) "${kotlin.math.round(lastFreq * 100) / 100.0} Hz" else "--- Hz"
+        val freqStr = if (lastFreq > 0) "${round(lastFreq * 100) / 100.0} Hz" else "--- Hz"
         Text(
             text = "Last Pressed: $lastNote | $freqStr",
             style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.padding(bottom = 16.dp)
+            modifier = Modifier.Companion.padding(bottom = 16.dp)
         )
 
-        Box(modifier = Modifier.wrapContentSize()) {
+        Box(modifier = Modifier.Companion.wrapContentSize()) {
             // White keys
             Row {
                 for (note in whiteKeys) {
@@ -87,7 +88,7 @@ fun BlackWhiteKeyboard(
             // Black keys overlay
             for (note in blackKeys) {
                 Box(
-                    modifier = Modifier.offset(x = (whiteKeyWidth * note.third) - (blackKeyWidth / 2))
+                    modifier = Modifier.Companion.offset(x = (whiteKeyWidth * note.third) - (blackKeyWidth / 2))
                 ) {
                     PianoKey(
                         note = note.first,
@@ -119,10 +120,10 @@ fun PianoKey(
     onNoteOff: () -> Unit
 ) {
     Box(
-        modifier = Modifier
+        modifier = Modifier.Companion
             .size(width, height)
-            .background(if (isBlack) Color.DarkGray else Color.White)
-            .border(1.dp, Color.Black)
+            .background(if (isBlack) Color.Companion.DarkGray else Color.Companion.White)
+            .border(1.dp, Color.Companion.Black)
             .pointerInput(index) {
                 detectTapGestures(
                     onPress = {
@@ -133,13 +134,13 @@ fun PianoKey(
                     }
                 )
             },
-        contentAlignment = Alignment.BottomCenter
+        contentAlignment = Alignment.Companion.BottomCenter
     ) {
         Text(
             text = note,
-            fontWeight = FontWeight.Bold,
-            color = if (isBlack) Color.White else Color.Black,
-            modifier = Modifier.padding(bottom = 8.dp)
+            fontWeight = FontWeight.Companion.Bold,
+            color = if (isBlack) Color.Companion.White else Color.Companion.Black,
+            modifier = Modifier.Companion.padding(bottom = 8.dp)
         )
     }
 }

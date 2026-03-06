@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import com.softsynth.ksyn.compose.UnitGeneratorFaders
 
 open class AutoStartScreen(
     val playable: KSynPlayable,

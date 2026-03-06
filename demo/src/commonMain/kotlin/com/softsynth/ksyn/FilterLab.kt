@@ -27,6 +27,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
+import com.softsynth.ksyn.compose.UnitGeneratorFaders
 import com.softsynth.ksyn.unitgen.FilterBandPass
 import com.softsynth.ksyn.unitgen.FilterBandStop
 import com.softsynth.ksyn.unitgen.FilterFourPoles
@@ -199,7 +200,7 @@ class FilterLab : Screen {
                         }
                     }
                 }
-                
+
                 UnitGeneratorFaders(unitGenerator = player.activeSource)
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -236,7 +237,7 @@ class FilterLab : Screen {
                         }
                     }
                 }
-                
+
                 UnitGeneratorFaders(unitGenerator = player.activeFilter)
             }
         }

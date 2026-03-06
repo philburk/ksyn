@@ -32,7 +32,10 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
+import com.softsynth.ksyn.compose.BlackWhiteKeyboard
+import com.softsynth.ksyn.compose.UnitGeneratorFaders
 import com.softsynth.ksyn.instruments.KSynInstrumentLibrary
+import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.unitgen.LineOut
 import com.softsynth.ksyn.unitgen.UnitGenerator
 import com.softsynth.ksyn.unitgen.UnitVoice
@@ -233,12 +236,12 @@ class KSynInstrumentsScreen : Screen {
                         player.activeVoice.noteOn(
                             frequency = frequency,
                             amplitude = 0.5,
-                            timeStamp = com.softsynth.ksyn.shared.time.TimeStamp(player.synth.currentTime)
+                            timeStamp = TimeStamp(player.synth.currentTime)
                         )
                     },
                     onNoteOff = {
                         player.activeVoice.noteOff(
-                            timeStamp = com.softsynth.ksyn.shared.time.TimeStamp(player.synth.currentTime)
+                            timeStamp = TimeStamp(player.synth.currentTime)
                         )
                     }
                 )

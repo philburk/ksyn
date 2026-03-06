@@ -1,4 +1,4 @@
-package com.softsynth.ksyn
+package com.softsynth.ksyn.compose
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
@@ -15,7 +15,7 @@ import com.softsynth.ksyn.unitgen.UnitGenerator
 fun UnitGeneratorFaders(
     unitGenerator: UnitGenerator,
     presetKey: Int = 0,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier.Companion
 ) {
     Column(modifier = modifier) {
         // Retrieve all UnitPorts from the UnitGenerator
@@ -26,11 +26,11 @@ fun UnitGeneratorFaders(
                 // Minimum and Maximum properties are stored as AudioSamples, we cast them to Float
                 val minValue = port.minimum.toFloat()
                 val maxValue = port.maximum.toFloat()
-                
+
                 // Use exponential taper if the minimum bound is strictly greater than 0
                 val isExponential = minValue > 0f
-                
-                // Add the fader, and include presetKey so switching presets recreates the faders 
+
+                // Add the fader, and include presetKey so switching presets recreates the faders
                 // and pulls initial values from the ports again.
                 key(unitGenerator, port.name, presetKey) {
                     PortFader(

@@ -34,3 +34,4 @@ plugins {
 
 include(":demo")
 include(":ksyn")
+include(":ksyn-compose")

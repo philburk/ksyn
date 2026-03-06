@@ -1,4 +1,4 @@
-package com.softsynth.ksyn
+package com.softsynth.ksyn.compose
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,8 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.softsynth.ksyn.ports.UnitInputPort
+
 import kotlin.math.exp
 import kotlin.math.ln
+import kotlin.math.round
 
 /**
  * A general-purpose fader (slider) that can control a UnitInputPort.
@@ -67,7 +69,7 @@ fun PortFader(
             value = sliderPosition,
             onValueChange = { newSliderValue ->
                 sliderPosition = newSliderValue
-                
+
                 // Calculate the actual value based on taper
                 val newValue = if (isExponential && minValue > 0f) {
                     // value = min * exp(slider * ln(max/min))
@@ -75,7 +77,7 @@ fun PortFader(
                 } else {
                     minValue + (newSliderValue * (maxValue - minValue))
                 }
-                
+
                 currentValue = newValue
                 port.set(newValue)
             },
@@ -83,7 +85,7 @@ fun PortFader(
         )
 
         // Format to 3 decimal places for cleaner display
-        val displayValue = kotlin.math.round(currentValue * 1000f) / 1000f
+        val displayValue = round(currentValue * 1000f) / 1000f
         Text(
             text = displayValue.toString(),
             modifier = Modifier.width(60.dp),
