@@ -16,7 +16,7 @@
 
 package com.softsynth.ksyn
 
-import com.mobileer.audiobridge.AudioBridge
+import com.mobileer.audiobridge.AudioOutputBridge
 import com.mobileer.audiobridge.AudioResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -84,6 +84,6 @@ abstract class AudioStreamManager {
     }
 
     companion object {
-        val audioBridge = AudioBridge()
+        val audioBridge = AudioOutputBridge.create()
     }
 }
