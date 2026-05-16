@@ -74,7 +74,7 @@ class EnvelopeAttackDecay : UnitGate() {
                     }
                 }
                 State.ATTACKING -> {
-                    // Increment first so we can render fast attacks.
+                    // Increment first so we can render fast attacks. Linear attack.
                     level += increment
                     if (level >= 1.0) {
                         level = 1.0
