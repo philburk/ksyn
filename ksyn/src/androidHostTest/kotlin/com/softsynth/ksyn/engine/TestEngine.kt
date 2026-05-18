@@ -102,7 +102,7 @@ public class TestEngine {
         synth.start()
         lineOut.start()
         var zeroCrossings = 0
-        var lastValue = 0.0
+        var lastValue = 0.0f
         var numFrames = 0L
         launch {
             for (i in 0 until 1000) {

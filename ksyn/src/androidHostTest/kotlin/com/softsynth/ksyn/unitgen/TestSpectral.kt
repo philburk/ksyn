@@ -17,7 +17,6 @@
 package com.softsynth.ksyn.unitgen
 
 import com.softsynth.ksyn.data.Spectrum
-import com.softsynth.math.FourierMath
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

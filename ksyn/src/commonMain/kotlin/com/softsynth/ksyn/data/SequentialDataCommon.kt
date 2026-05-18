@@ -35,7 +35,7 @@ abstract class SequentialDataCommon : SequentialData {
     abstract override fun readDouble(index: Int): Double
     abstract override fun writeSample(index: Int, value: AudioSample)
     abstract override fun readSample(index: Int): AudioSample
-    abstract override fun getRateScaler(index: Int, synthesisRate: Double): Double
+    abstract override fun getRateScaler(index: Int, synthesisPeriod: Double): Double
     abstract override val channelsPerFrame: Int
 
     /**

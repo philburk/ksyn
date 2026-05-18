@@ -67,14 +67,14 @@ interface SequentialData {
     val releaseEnd: Int
 
     /**
-     * Get rate to play the data. In an envelope this correspond to the inverse of the frame
+     * Get rate to play the data. In an envelope this corresponds to the inverse of the frame
      * duration and would vary frame to frame. For an audio sample it is 1.0.
      *
      * @param index
-     * @param synthesisRate
+     * @param synthesisPeriod
      * @return rate to scale the playback speed.
      */
-    fun getRateScaler(index: Int, synthesisRate: Double): Double
+    fun getRateScaler(index: Int, synthesisPeriod: Double): Double
 
     /**
      * @return For a stereo sample, return 2.
