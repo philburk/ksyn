@@ -16,42 +16,36 @@
 
 package com.softsynth.ksyn
 
+import com.mobileer.audiobridge.writeSuspending
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 
 class KSynAudioBridge(val synth: Synthesizer): AudioStreamManager() {
     val STEREO_CHANNELS = 2
 
     override suspend fun onAudioTask(scope: CoroutineScope) {
-        val framesPerBuffer = 64 // TODO right size?
-
-        // Set time to sleep based on the audio burst size.
-        val framesPerBurst = audioBridge.getFramesPerBurst()
-        val burstMillis = (1000 * framesPerBurst * 0.5 / synth.frameRate).toLong()
         synth.start()
         try {
-            while (isActive()) { // Check isActive for cooperative cancellation
+            while (scope.isActive) { // Check isActive for cooperative cancellation
                 val stereoBuffer = synth.renderBuffer()
-                var framesLeft = stereoBuffer.size / STEREO_CHANNELS
+                var framesToWrite = stereoBuffer.size / STEREO_CHANNELS
 
-                var offset = 0
-                while (framesLeft > 0 && isActive()) {
-                    val frameCount = audioBridge.write(stereoBuffer, offset, framesLeft)
-                    if (frameCount < 0) {
-                        // Handle error from audioBridge.write, e.g., stream closed
-                        println("AudioBridge write error: $frameCount")
-                        scope.cancel("AudioBridge write error") // Cancel the coroutine
-                        break
-                    }
-                    offset += frameCount
-                    framesLeft -= frameCount
-                    if (framesLeft > 0 && scope.isActive) {
-                        // Wait long enough for one burst of room to be available.
-                        delay(burstMillis)
-                    }
+                // Write the synthesized buffer, waiting up to 1000ms if needed.
+                val framesWritten = audioBridge.writeSuspending(
+                    stereoBuffer,
+                    0,
+                    framesToWrite,
+                    timeoutMillis = 1000L
+                )
+                if (framesWritten < 0) {
+                    // Handle error from audioBridge.write, e.g., stream closed
+                    println("AudioBridge write error: $framesWritten")
+                    scope.cancel("AudioBridge write error") // Cancel the coroutine
+                    break
+                } else if (framesWritten < framesToWrite) {
+                    println("AudioBridge write timeout")
                 }
             }
         } catch (e: CancellationException) {
