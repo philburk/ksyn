@@ -45,7 +45,9 @@ class KSynAudioBridge(val synth: Synthesizer): AudioStreamManager() {
                     scope.cancel("AudioBridge write error") // Cancel the coroutine
                     break
                 } else if (framesWritten < framesToWrite) {
-                    println("AudioBridge write timeout")
+                    println("AudioBridge write timeout: framesWritten = $framesWritten")
+                    scope.cancel("AudioBridge write timeout") // Cancel the coroutine
+                    break
                 }
             }
         } catch (e: CancellationException) {
@@ -56,5 +58,4 @@ class KSynAudioBridge(val synth: Synthesizer): AudioStreamManager() {
             synth.stop()
         }
     }
-
 }
