@@ -59,6 +59,9 @@ class HomeScreen : Screen {
                 Button(
                     onClick = { navigator.push(PlaySampleScreen()) }
                 ) { Text("Play Sample") }
+                Button(
+                    onClick = { navigator.push(PlayEnvelopeScreen()) }
+                ) { Text("Play Envelope") }
                 
                 Button(
                     onClick = { navigator.push(FilterLab()) }

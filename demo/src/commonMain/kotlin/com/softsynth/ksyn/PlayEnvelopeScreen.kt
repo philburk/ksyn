@@ -24,62 +24,60 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
 import com.softsynth.ksyn.compose.BlackWhiteKeyboard
-import com.softsynth.ksyn.data.FloatSample
-import com.softsynth.math.AudioMath
+import com.softsynth.ksyn.data.SegmentedEnvelope
 import com.softsynth.ksyn.unitgen.LineOut
+import com.softsynth.ksyn.unitgen.SawtoothOscillatorDPW
 import com.softsynth.ksyn.unitgen.VariableRateMonoReader
 import com.softsynth.ksyn.util.SampleLoader
+import com.softsynth.math.AudioMath
 import ksyn_project.demo.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
+import kotlin.math.round
 
-class PlaySamplePlayer : KSynPlayable() {
+class PlayEnvelopePlayer : KSynPlayable() {
     val ksynAudioBridge: KSynAudioBridge
     val synth = KSyn.createSynthesizer()
     val lineOut = LineOut()
-    val sampleReader = VariableRateMonoReader()
+    val sawOsc = SawtoothOscillatorDPW()
+    val envelopeReader = VariableRateMonoReader()
 
-    var sample: FloatSample? = null
+    lateinit var ampEnvelope: SegmentedEnvelope
     var isLoaded by mutableStateOf(false)
     var currentRate by mutableStateOf(1.0)
 
     init {
         ksynAudioBridge = KSynAudioBridge(synth)
         synth.add(lineOut)
-        synth.add(sampleReader)
+        synth.add(sawOsc)
+        synth.add(envelopeReader)
 
-        // Connect the mono reader to both left and right outputs
-        sampleReader.output.connect(0, lineOut.input, 0)
-        sampleReader.output.connect(0, lineOut.input, 1)
-    }
+        envelopeReader.output.connect(sawOsc.amplitude,)
+        sawOsc.output.connect(0, lineOut.input, 0)
+        sawOsc.output.connect(0, lineOut.input, 1)
 
-    @OptIn(ExperimentalResourceApi::class)
-    suspend fun loadSample() {
-        try {
-            val bytes = Res.readBytes("files/Clarinet.wav")
-            sample = SampleLoader.loadFloatSample(bytes)
-            isLoaded = true
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        val ampData = doubleArrayOf(
+            0.02, 0.9, // duration,value pair 0, "attack"
+            0.10, 0.5, // pair 1, "decay"
+            0.50, 0.0  // pair 2, "release"
+            )
+        ampEnvelope = SegmentedEnvelope( ampData )
+
+        // Hang at end of decay segment to provide a "sustain" segment.
+
+        ampEnvelope.sustainBegin = 1
+        ampEnvelope.sustainEnd = 1
     }
 
     fun playNote(frequency: Double) {
-        val loadedSample = sample ?: return
-        val baseFreq = AudioMath.pitchToFrequency(60.0) // Middle C assumption
-        val rateScaler = frequency / baseFreq
-        val targetRate = loadedSample.frameRate * rateScaler
-        currentRate = rateScaler
-
         synth.queueCommand {
-            sampleReader.rate.set(targetRate)
-            sampleReader.dataQueue.queueOn(loadedSample)
+            sawOsc.frequency.set(frequency)
+            envelopeReader.dataQueue.queueOn(ampEnvelope)
         }
     }
 
     fun stopNote() {
-        val loadedSample = sample ?: return
         synth.queueCommand {
-            sampleReader.dataQueue.queueOff(loadedSample)
+            envelopeReader.dataQueue.queueOff(ampEnvelope)
         }
     }
 
@@ -89,21 +87,20 @@ class PlaySamplePlayer : KSynPlayable() {
     }
 
     override fun stop() {
-        ksynAudioBridge.stop()
         lineOut.stop()
+        ksynAudioBridge.stop()
     }
 }
 
-class PlaySampleScreen : Screen {
+class PlayEnvelopeScreen : Screen {
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
-        val player = remember { PlaySamplePlayer() }
+        val player = remember { PlayEnvelopePlayer() }
         var isPlaying by remember { mutableStateOf(false) }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
-            player.loadSample()
             if (player.start() == AudioResult.OK) isPlaying = true
         }
 
@@ -120,8 +117,7 @@ class PlaySampleScreen : Screen {
 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                Text("Clarinet.wav (Native Compose Resources Decoder)", style = MaterialTheme.typography.titleMedium)
-                Text("Playback Rate Scaler: ${kotlin.math.round(player.currentRate * 1000) / 1000.0}x", color = MaterialTheme.colorScheme.primary)
+                Text("Play a SawtoothOscillarDPW. Use a SegmentedEnvelope to control amplitude.", style = MaterialTheme.typography.titleMedium)
 
                 Spacer(modifier = Modifier.height(16.dp))
 
