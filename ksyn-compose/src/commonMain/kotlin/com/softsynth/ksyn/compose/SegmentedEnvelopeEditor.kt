@@ -106,6 +106,8 @@ fun SegmentedEnvelopeEditor(
     var sustainEnd   by remember { mutableIntStateOf(envelope.sustainEnd) }
     var releaseBegin by remember { mutableIntStateOf(envelope.releaseBegin) }
     var releaseEnd   by remember { mutableIntStateOf(envelope.releaseEnd) }
+    // Raw pixel x-range of the in-progress loop drag; null when no drag is active.
+    var loopDragRect by remember { mutableStateOf<Pair<Float, Float>?>(null) }
 
     fun toPixelX(time: Float,  width: Float)  = time / maxTime * width
     fun toPixelY(value: Float, height: Float) =
@@ -119,18 +121,6 @@ fun SegmentedEnvelopeEditor(
         return frames.map { f -> t += f.duration; t }
     }
 
-    /** Index of the frame whose accumulated time is nearest to pixel [px]. */
-    fun nearestFrameIndex(px: Float, accTimes: List<Float>, width: Float): Int {
-        if (accTimes.isEmpty()) return -1
-        val t = toTime(px, width)
-        var bestIdx = 0
-        var bestDist = Float.MAX_VALUE
-        accTimes.forEachIndexed { i, accT ->
-            val d = abs(accT - t)
-            if (d < bestDist) { bestDist = d; bestIdx = i }
-        }
-        return bestIdx
-    }
     /** Index of the next frame beyond the pixel [px]. */
     fun nextFrameIndex(px: Float, accTimes: List<Float>, width: Float): Int {
         if (accTimes.isEmpty()) return -1
@@ -250,24 +240,40 @@ fun SegmentedEnvelopeEditor(
                                 } while (event.changes.any { it.id == down.id && it.pressed })
                             }
 
-                            // ── Loop modes: drag sideways to set begin/end frame indices ───
+                            // ── Loop modes: drag to select, apply indices on release ────────
                             EditMode.SustainLoop, EditMode.ReleaseLoop -> {
                                 val accTimes = accumulatedTimes()
                                 if (accTimes.isEmpty()) return@awaitEachGesture
-                                val anchorIdx = nextFrameIndex(down.position.x, accTimes, w)
-                                if (anchorIdx < 0) return@awaitEachGesture
 
-                                fun applyLoop(a: Int, b: Int) {
-                                    val left = minOf(a, b)
-                                    val right = maxOf(a, b)
+                                val anchorX = down.position.x
+                                loopDragRect = Pair(anchorX, anchorX)
+                                down.consume()
+
+                                var currentX = anchorX
+                                do {
+                                    val event  = awaitPointerEvent()
+                                    val change = event.changes.find { it.id == down.id } ?: break
+                                    if (change.pressed) {
+                                        currentX = change.position.x
+                                        loopDragRect = Pair(anchorX, currentX)
+                                        change.consume()
+                                    }
+                                } while (event.changes.any { it.id == down.id && it.pressed })
+
+                                // Apply loop indices on release based on the final drag bounds.
+                                val x1 = minOf(anchorX, currentX)
+                                val x2 = maxOf(anchorX, currentX)
+                                val beginIdx = nextFrameIndex(x1, accTimes, w)
+                                val endIdx   = nextFrameIndex(x2, accTimes, w)
+                                if (beginIdx >= 0 && endIdx >= 0) {
+                                    val left  = minOf(beginIdx, endIdx)
+                                    val right = maxOf(beginIdx, endIdx)
                                     var begin = -1 // no loop by default
                                     var end = -1
-                                    if ((right - left) == 1) { // single hold point
-                                        end = right
-                                        begin = end
+                                    if (right - left == 1) { // single hold point
+                                        begin = right; end = right
                                     } else if ((right - left) > 1) { // loop with multiple points
-                                        end = right
-                                        begin = end - (right - left)
+                                        begin = left; end = right
                                     }
                                     if (editMode == EditMode.SustainLoop) {
                                         sustainBegin = begin; sustainEnd = end
@@ -276,23 +282,7 @@ fun SegmentedEnvelopeEditor(
                                     }
                                     writeBack()
                                 }
-
-                                applyLoop(anchorIdx, anchorIdx)
-                                down.consume()
-
-                                var dragIdx = anchorIdx
-                                do {
-                                    val event  = awaitPointerEvent()
-                                    val change = event.changes.find { it.id == down.id } ?: break
-                                    if (change.pressed) {
-                                        val newIdx = nextFrameIndex(change.position.x, accumulatedTimes(), w)
-                                        if (newIdx >= 0 && newIdx != dragIdx) {
-                                            dragIdx = newIdx
-                                            applyLoop(anchorIdx, dragIdx)
-                                        }
-                                        change.consume()
-                                    }
-                                } while (event.changes.any { it.id == down.id && it.pressed })
+                                loopDragRect = null
                             }
                         }
                     }
@@ -312,7 +302,7 @@ fun SegmentedEnvelopeEditor(
 
             // ── Loop region visualisation (drawn before the line) ─────────────
             fun drawLoopRegion(begin: Int, end: Int, bgColor: Color, barColor: Color) {
-                if (begin < 0 || end < 0 || begin >= accTimes.size || end >= accTimes.size) return
+                if (begin < 0 || end < 0 || begin > accTimes.size || end > accTimes.size) return
                 if (begin == end) {
                     // Single-frame hold → full-height vertical bar
                     val x = toPixelX(accTimes[begin - ENV_OFFSET], w)
@@ -354,6 +344,15 @@ fun SegmentedEnvelopeEditor(
                     drawCircle(Color.White, radius = vertexRadius, center = Offset(cx, cy),
                         style = Stroke(width = 2f))
                 }
+            }
+
+            // ── In-progress loop drag selection (drawn on top) ────────────────
+            loopDragRect?.let { (ax, bx) ->
+                val left  = minOf(ax, bx)
+                val right = maxOf(ax, bx)
+                drawRect(Color(0x44FFFFFF), topLeft = Offset(left, 0f), size = Size(right - left, h))
+                drawRect(Color.White, topLeft = Offset(left, 0f), size = Size(right - left, h),
+                    style = Stroke(width = 1.5f))
             }
         }
 
