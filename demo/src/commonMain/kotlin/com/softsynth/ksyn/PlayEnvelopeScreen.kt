@@ -66,8 +66,9 @@ class PlayEnvelopePlayer : KSynPlayable() {
         ampEnvelope = SegmentedEnvelope( ampData )
 
         // Hang at end of decay segment to provide a "sustain" segment.
-        ampEnvelope.sustainBegin = 1
-        ampEnvelope.sustainEnd = 1
+        // Note End point is one past the last index.
+        ampEnvelope.sustainBegin = 2
+        ampEnvelope.sustainEnd = 2
     }
 
     fun playNote(frequency: Double) {

@@ -22,6 +22,7 @@ import com.softsynth.ksyn.data.SequentialData
 import com.softsynth.ksyn.data.ShortSample
 import com.softsynth.ksyn.engine.SynthesisEngine
 import com.softsynth.ksyn.unitgen.FixedRateMonoReader
+import com.softsynth.ksyn.unitgen.VariableRateMonoReader
 import kotlinx.coroutines.runBlocking
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -42,7 +43,7 @@ class TestQueuedDataPort {
         0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f
     )
     private lateinit var floatSample: FloatSample
-    private lateinit var reader: FixedRateMonoReader
+    private lateinit var reader: VariableRateMonoReader
 
     @BeforeTest
     fun setUp() {
@@ -227,11 +228,33 @@ class TestQueuedDataPort {
         floatSample = FloatSample(floatData.size, 1)
         floatSample.write(floatData)
 
-        reader = FixedRateMonoReader()
+        reader = VariableRateMonoReader()
         synth.add(reader)
         val dataQueue = reader.dataQueue
         assertFalse(dataQueue.hasMore(), "start empty")
         return dataQueue
+    }
+
+    @Test
+    fun testQueueSustainHold() = runBlocking {
+        val dataQueue = setupFloatSample()
+
+        floatSample.sustainBegin = 1
+        floatSample.sustainEnd = 2
+        floatSample.releaseBegin = -1
+        floatSample.releaseEnd = -1
+
+        dataQueue.queueOn(floatSample, synth.createTimeStamp())
+        sleepUntil(synth.currentTime + 0.01)
+
+        checkQueuedData(floatData, dataQueue, 0, 4)
+        assertFalse(dataQueue.hasMore(), "should be holding in place")
+
+        dataQueue.queueOff(floatSample, true)
+        sleepUntil(synth.currentTime + 0.01)
+
+        checkQueuedData(floatData, dataQueue, 1, 7) // release
+        assertFalse(dataQueue.hasMore(), "end empty")
     }
 
     @Test
@@ -318,7 +341,7 @@ class TestQueuedDataPort {
 
     private fun checkQueuedData(data: FloatArray, dataQueue: UnitDataQueuePort, offset: Int, numFrames: Int) {
         for (i in 0 until numFrames) {
-            assertTrue(dataQueue.hasMore(), "got data")
+            assertTrue(dataQueue.hasMore(), "should have more data")
             val value = dataQueue.readNextMonoDouble(synth.framePeriod)
             assertEquals(data[i + offset], value, 0.0001f, "data matches")
         }
