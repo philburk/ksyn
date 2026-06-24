@@ -18,22 +18,27 @@ package com.softsynth.ksyn
 
 import com.mobileer.audiobridge.AudioResult
 import com.softsynth.ksyn.unitgen.LineOut
+import com.softsynth.ksyn.unitgen.ScopeProbe
 import com.softsynth.ksyn.unitgen.WhiteNoise
 
 private class WhiteNoisePlayer(): KSynPlayable() {
     var ksynAudioBridge: KSynAudioBridge
     val noise = WhiteNoise()
     val lineOut = LineOut()
+    val probe = ScopeProbe(1)
 
     init {
         val synth = KSyn.createSynthesizer()
         ksynAudioBridge = KSynAudioBridge(synth)
         synth.add(noise)
+        synth.add(probe)
         synth.add(lineOut)
         noise.output.connect(0, lineOut.input, 0)
         noise.output.connect(0, lineOut.input, 1)
+        noise.output.connect(0, probe.input, 0)
         noise.amplitude.set(0.1)
         lineOut.start()
+        probe.start()
     }
 
     override fun start(): AudioResult {
@@ -43,6 +48,8 @@ private class WhiteNoisePlayer(): KSynPlayable() {
     override fun stop() {
         ksynAudioBridge.stop()
     }
+
+    override fun getScopeProbe(): ScopeProbe = probe
 }
 
 

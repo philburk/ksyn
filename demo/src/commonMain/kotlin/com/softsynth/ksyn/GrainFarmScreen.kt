@@ -19,25 +19,30 @@ package com.softsynth.ksyn
 import com.mobileer.audiobridge.AudioResult
 import com.softsynth.ksyn.unitgen.GrainFarm
 import com.softsynth.ksyn.unitgen.LineOut
+import com.softsynth.ksyn.unitgen.ScopeProbe
 import com.softsynth.ksyn.unitgen.UnitGenerator
 
 private class GrainFarmDemoPlayer() : KSynPlayable() {
     var ksynAudioBridge: KSynAudioBridge
     val grainFarm = GrainFarm()
     val lineOut = LineOut()
+    val probe = ScopeProbe(numChannels = 1)
 
     init {
         val synth = KSyn.createSynthesizer()
         ksynAudioBridge = KSynAudioBridge(synth)
         synth.add(grainFarm)
+        synth.add(probe)
         synth.add(lineOut)
 
         grainFarm.allocate(8)
         
         grainFarm.output.connect(0, lineOut.input, 0)
         grainFarm.output.connect(0, lineOut.input, 1)
+        grainFarm.output.connect(probe.input)
 
         lineOut.start()
+        probe.start()
     }
 
     override fun start(): AudioResult {
@@ -51,6 +56,7 @@ private class GrainFarmDemoPlayer() : KSynPlayable() {
     override fun getUnitGenerator(): UnitGenerator {
         return grainFarm
     }
+    override fun getScopeProbe(): ScopeProbe = probe
 }
 
 class GrainFarmScreen() : AutoStartScreen(GrainFarmDemoPlayer(),

@@ -19,23 +19,28 @@ package com.softsynth.ksyn
 import com.mobileer.audiobridge.AudioResult
 import com.softsynth.ksyn.unitgen.LineOut
 import com.softsynth.ksyn.unitgen.SawtoothOscillatorBL
+import com.softsynth.ksyn.unitgen.ScopeProbe
 import com.softsynth.ksyn.unitgen.UnitGenerator
 
 internal class SawtoothPlayer(private val frequency: Float): KSynPlayable() {
     var ksynAudioBridge: KSynAudioBridge
     val sawtooth = SawtoothOscillatorBL()
     val lineOut = LineOut()
+    val probe = ScopeProbe(numChannels = 1)
 
     init {
         val synth = KSyn.createSynthesizer()
         ksynAudioBridge = KSynAudioBridge(synth)
         synth.add(sawtooth)
         synth.add(lineOut)
+        synth.add(probe)
         sawtooth.output.connect(0, lineOut.input, 0)
         sawtooth.output.connect(0, lineOut.input, 1)
+        sawtooth.output.connect(probe.input)
         sawtooth.frequency.set(frequency.toDouble())
         sawtooth.amplitude.set(0.1)
         lineOut.start()
+        probe.start()
     }
 
     override fun start(): AudioResult {
@@ -46,9 +51,8 @@ internal class SawtoothPlayer(private val frequency: Float): KSynPlayable() {
         ksynAudioBridge.stop()
     }
 
-    override fun getUnitGenerator(): UnitGenerator {
-        return sawtooth
-    }
+    override fun getUnitGenerator(): UnitGenerator = sawtooth
+    override fun getScopeProbe(): ScopeProbe = probe
 }
 
 class PlaySawtooth() : AutoStartScreen(SawtoothPlayer(440.0f),

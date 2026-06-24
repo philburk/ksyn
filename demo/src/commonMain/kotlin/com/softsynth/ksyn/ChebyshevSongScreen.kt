@@ -26,11 +26,13 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.mobileer.audiobridge.AudioResult
+import com.softsynth.ksyn.compose.Oscilloscope
 import com.softsynth.ksyn.instruments.WaveShapingVoice
 import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.unitgen.LineOut
 import com.softsynth.ksyn.unitgen.PassThrough
 import com.softsynth.ksyn.unitgen.RoomReverb
+import com.softsynth.ksyn.unitgen.ScopeProbe
 import com.softsynth.ksyn.unitgen.UnitVoice
 import com.softsynth.ksyn.util.PseudoRandom
 import com.softsynth.ksyn.util.VoiceAllocator
@@ -43,6 +45,7 @@ private class ChebyshevSongPlayer : KSynPlayable() {
     val mixer = PassThrough()
     val reverb = RoomReverb(1.0)
     val lineOut = LineOut()
+    val scope = ScopeProbe(numChannels = 2, displayBufferSize = 512)
 
     val maxVoices = 8
     val maxNotes = 5
@@ -57,10 +60,13 @@ private class ChebyshevSongPlayer : KSynPlayable() {
         synth.add(mixer)
         synth.add(lineOut)
         synth.add(reverb)
+        synth.add(scope)
 
         mixer.output.connect(reverb.input)
-        mixer.output.connect(0, lineOut.input, 0) // dry
+        mixer.output.connect(0, lineOut.input, 0)  // dry
         reverb.output.connect(0, lineOut.input, 1) // wet
+        mixer.output.connect(0, scope.input, 0)    // dry → scope ch0
+        reverb.output.connect(0, scope.input, 1)   // wet → scope ch1
 
         val voices: Array<UnitVoice> = Array(maxVoices) { WaveShapingVoice() }.map { it as UnitVoice }.toTypedArray()
         for (i in 0 until maxVoices) {
@@ -72,7 +78,10 @@ private class ChebyshevSongPlayer : KSynPlayable() {
         allocator = VoiceAllocator(voices)
 
         lineOut.start()
+        scope.start()
     }
+
+    override fun getScopeProbe() = scope
 
     override fun start(): AudioResult {
         return ksynAudioBridge.start()
@@ -158,7 +167,12 @@ class ChebyshevSongScreen : Screen {
                 Text("Chebyshev Song", style = MaterialTheme.typography.headlineLarge)
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Generative Pentatonic Melody using WaveShapingVoice")
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                Oscilloscope(
+                    probe = player.scope,
+                    modifier = Modifier.fillMaxWidth().height(200.dp),
+                )
+                Spacer(modifier = Modifier.height(16.dp))
                 Button(onClick = { navigator.pop() }) {
                     Text("Go Back")
                 }
