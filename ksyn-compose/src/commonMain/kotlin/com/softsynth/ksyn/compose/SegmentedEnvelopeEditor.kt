@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.isShiftPressed
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -86,7 +86,20 @@ fun SegmentedEnvelopeEditor(
             .background(Color(0xFF1A1A2E))
             .pointerInput(Unit) {
                 awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
+                    // Wait for first down, capturing keyboard modifiers at that moment.
+                    // We loop over awaitPointerEvent() rather than awaitFirstDown() so we
+                    // can read event.keyboardModifiers before the change is consumed.
+                    var downChange: androidx.compose.ui.input.pointer.PointerInputChange? = null
+                    var isShiftHeld = false
+                    while (downChange == null) {
+                        val evt = awaitPointerEvent()
+                        val candidate = evt.changes.firstOrNull { !it.previousPressed && it.pressed }
+                        if (candidate != null) {
+                            isShiftHeld = evt.keyboardModifiers.isShiftPressed
+                            downChange = candidate
+                        }
+                    }
+                    val down = downChange!!
                     val pos  = down.position
                     val w = size.width.toFloat()
                     val h = size.height.toFloat()
@@ -103,6 +116,14 @@ fun SegmentedEnvelopeEditor(
                         val dy = pos.y - vy
                         val d2 = dx * dx + dy * dy
                         if (d2 <= hitRadius2 && d2 < minDist2) { minDist2 = d2; activeIndex = i }
+                    }
+
+                    // ── Shift+click on a vertex: delete that frame ─────────────────────
+                    if (isShiftHeld && activeIndex >= 0) {
+                        frames.removeAt(activeIndex)
+                        writeBack()
+                        down.consume()
+                        return@awaitEachGesture
                     }
 
                     // ── Insert a new frame if no vertex was hit ────────────────────────
