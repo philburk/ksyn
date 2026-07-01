@@ -4,7 +4,12 @@ plugins {
     alias(libs.plugins.androidLint)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
+    id("maven-publish")
 }
+
+group = "com.softsynth.ksyn.compose"
+// The version numbers here should match the version in KSyn.kts
+version = "1.1.1"
 
 kotlin {
 

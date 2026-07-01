@@ -2,6 +2,7 @@ package com.softsynth.ksyn.unitgen
 
 import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.ports.UnitInputPort
+import kotlin.concurrent.Volatile
 
 /**
  * A multi-channel oscilloscope probe UnitGenerator.
