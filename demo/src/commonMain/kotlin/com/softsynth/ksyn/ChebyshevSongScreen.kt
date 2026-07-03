@@ -35,7 +35,7 @@ import com.softsynth.ksyn.unitgen.RoomReverb
 import com.softsynth.ksyn.unitgen.ScopeProbe
 import com.softsynth.ksyn.unitgen.UnitVoice
 import com.softsynth.ksyn.util.PseudoRandom
-import com.softsynth.ksyn.util.VoiceAllocator
+import com.softsynth.ksyn.voices.OnOffAllocator
 import com.softsynth.math.AudioMath
 import kotlinx.coroutines.*
 
@@ -49,7 +49,7 @@ private class ChebyshevSongPlayer : KSynPlayable() {
 
     val maxVoices = 8
     val maxNotes = 5
-    val allocator: VoiceAllocator
+    val allocator: OnOffAllocator<UnitVoice>
     val pseudo = PseudoRandom()
 
     val scale = intArrayOf(0, 2, 4, 7, 9) // pentatonic scale
@@ -75,7 +75,7 @@ private class ChebyshevSongPlayer : KSynPlayable() {
             voice.usePreset(0)
             voice.getOutputPort().connect(mixer.input)
         }
-        allocator = VoiceAllocator(voices)
+        allocator = OnOffAllocator(voices)
 
         lineOut.start()
         scope.start()
@@ -99,15 +99,21 @@ private class ChebyshevSongPlayer : KSynPlayable() {
     }
 
     fun noteOff(time: Double, noteNumber: Int) {
-        allocator.noteOff(noteNumber, TimeStamp(time))
+        synth.queueCommand {
+            val voice: UnitVoice? = allocator.off(noteNumber)
+            voice?.noteOff(TimeStamp(time)) // TODO use nonscheduled noteOff?
+        }
     }
 
     fun noteOn(time: Double, noteNumber: Int) {
         val frequency = indexToFrequency(noteNumber)
         val amplitude = 0.1
         val timeStamp = TimeStamp(time)
-        allocator.noteOn(noteNumber, frequency, amplitude, timeStamp)
-        allocator.setPort(noteNumber, "Range", 0.7, synth.createTimeStamp())
+        synth.queueCommand {
+            val voice = allocator.on(noteNumber)
+            voice.noteOn(frequency, amplitude, timeStamp)
+            voice.setPort("Range", 0.7.toSample(), timeStamp)
+        }
     }
 
     suspend fun playSongCoroutine() {

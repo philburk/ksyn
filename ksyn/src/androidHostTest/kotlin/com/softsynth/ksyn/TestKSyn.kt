@@ -17,7 +17,7 @@ class TestKSyn {
 
     @Test
     fun versionIsReadable() {
-        assertTrue(KSyn.VERSION_CODE >= (17 shl 16))
+        assertTrue(KSyn.VERSION_CODE >= 0x00010101)
     }
 
     @Test
