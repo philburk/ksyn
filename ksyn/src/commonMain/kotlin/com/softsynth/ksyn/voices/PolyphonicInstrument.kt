@@ -34,30 +34,44 @@ import com.softsynth.ksyn.util.VoiceAllocator
  *
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
-open class PolyphonicInstrument(val synth: Synthesizer, val voices: Array<UnitVoice>) : Circuit(), UnitSource, Instrument {
+open class PolyphonicInstrument(val synth: Synthesizer, val voices: Array<PitchedVoice>) : Circuit(), UnitSource, Instrument {
     private val mixer: Multiply
-    private val voiceAllocator: OnOffAllocator<UnitVoice>
+    private val pitchPassthrough: PassThrough
+    private val voiceAllocator: OnOffAllocator<PitchedVoice>
     val amplitude: UnitInputPort
+    val pitchOffset: UnitInputPort
 
     init {
-        voiceAllocator = OnOffAllocator<UnitVoice>(voices)
+        voiceAllocator = OnOffAllocator<PitchedVoice>(voices)
         mixer = Multiply()
+        pitchPassthrough = PassThrough()
+        add(pitchPassthrough)
         add(mixer)
+
+        pitchOffset = pitchPassthrough.input
+        addPort(pitchOffset, "PitchOffset")
+        pitchOffset.setup(-2.0, 0.0, 2.0)
+
+        amplitude = mixer.inputB
+        addPort(amplitude, "Amplitude")
+        amplitude.setup(0.0001, 0.4, 2.0)
         
-        // Mix all the voices to one output.
+        // Mix all the voices to one output using port mixing.
         for (voice in voices) {
             val unit = voice.getUnitGenerator()
             val wasEnabled = unit.isEnabled
             // This overrides the enabled property of the voice.
             add(unit)
             voice.getOutputPort().connect(mixer.inputA)
+            val pitchPort = voice.getPitchPort()
+            if (pitchPort != null) {
+                pitchPassthrough.output.connect(pitchPort)
+                pitchPort.isValueAdded = true
+            }
             // restore
             unit.isEnabled = wasEnabled
         }
 
-        amplitude = mixer.inputB
-        addPort(amplitude, "Amplitude")
-        amplitude.setup(0.0001, 0.4, 2.0)
         exportAllInputPorts()
     }
 
@@ -73,7 +87,7 @@ open class PolyphonicInstrument(val synth: Synthesizer, val voices: Array<UnitVo
             if (port is UnitInputPort) {
                 val voicePortName = port.name
                 // FIXME Need better way to identify ports that are per note.
-                if (voicePortName != "Frequency" && voicePortName != "Amplitude") {
+                if (voicePortName != "Pitch" && voicePortName != "Amplitude") {
                     exportNamedInputPort(voicePortName)
                 }
             }
@@ -130,18 +144,18 @@ open class PolyphonicInstrument(val synth: Synthesizer, val voices: Array<UnitVo
         usePreset(presetIndex)
     }
 
-    override fun noteOn(tag: Int, frequency: Double, amplitude: Double, timeStamp: TimeStamp?) {
+    override fun noteOn(tag: Int, pitch: Double, amplitude: Double, timeStamp: TimeStamp?) {
         synth.queueCommand {
             val voice = voiceAllocator.on(tag)
             val ts: TimeStamp = (timeStamp ?: synth.currentTime) as TimeStamp
-            voice.noteOn(frequency, amplitude, ts)
+            voice.noteOn(pitch, amplitude, ts)
             voice.setPort("Range", 0.7.toSample(), ts)
         }
     }
 
     override fun noteOff(tag: Int, timeStamp: TimeStamp?) {
         synth.queueCommand {
-            val voice: UnitVoice? = voiceAllocator.off(tag)
+            val voice: PitchedVoice? = voiceAllocator.off(tag)
             val ts: TimeStamp = (timeStamp ?: synth.currentTime) as TimeStamp
             voice?.noteOff(ts) // TODO use nonscheduled noteOff?
         }

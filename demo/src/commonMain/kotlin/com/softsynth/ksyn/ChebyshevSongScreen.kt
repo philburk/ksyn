@@ -32,10 +32,9 @@ import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.unitgen.LineOut
 import com.softsynth.ksyn.unitgen.RoomReverb
 import com.softsynth.ksyn.unitgen.ScopeProbe
-import com.softsynth.ksyn.unitgen.UnitVoice
 import com.softsynth.ksyn.util.PseudoRandom
+import com.softsynth.ksyn.voices.PitchedVoice
 import com.softsynth.ksyn.voices.PolyphonicInstrument
-import com.softsynth.math.AudioMath
 import kotlinx.coroutines.*
 
 private class ChebyshevSongPlayer : KSynPlayable() {
@@ -59,7 +58,7 @@ private class ChebyshevSongPlayer : KSynPlayable() {
         synth.add(reverb)
         synth.add(scope)
 
-        val voices: Array<UnitVoice> = Array(maxVoices) { WaveShapingVoice() }.map { it as UnitVoice }.toTypedArray()
+        val voices: Array<PitchedVoice> = Array(maxVoices) { WaveShapingVoice() }.map { it as PitchedVoice }.toTypedArray()
         for (i in 0 until maxVoices) {
             val voice = voices[i] as WaveShapingVoice
             synth.add(voice)
@@ -86,11 +85,11 @@ private class ChebyshevSongPlayer : KSynPlayable() {
         ksynAudioBridge.stop()
     }
 
-    fun indexToFrequency(index: Int): Double {
+    fun indexToPitch(index: Int): Double {
         val octave = index / scale.size
-        val temp = index % scale.size
-        val pitch = scale[temp] + (12 * octave)
-        return AudioMath.pitchToFrequency(pitch + 16.0)
+        val degree = index % scale.size
+        val pitch = scale[degree] + (12 * octave)
+        return pitch + 16.0
     }
 
     fun noteOff(time: Double, noteNumber: Int) {
@@ -98,10 +97,11 @@ private class ChebyshevSongPlayer : KSynPlayable() {
     }
 
     fun noteOn(time: Double, noteNumber: Int) {
-        val frequency = indexToFrequency(noteNumber)
+        val pitch = indexToPitch(noteNumber)
+        print("CSS: noteNumber = $noteNumber, pitch = $pitch\n")
         val amplitude = 0.1
         val timeStamp = TimeStamp(time)
-        polyphonicInstrument.noteOn(noteNumber, frequency, amplitude, timeStamp)
+        polyphonicInstrument.noteOn(noteNumber, pitch, amplitude, timeStamp)
     }
 
     suspend fun playSongCoroutine() {
@@ -113,7 +113,7 @@ private class ChebyshevSongPlayer : KSynPlayable() {
         var beatIndex = 0
 
         while (currentCoroutineContext().isActive) {
-            // on every measure, maybe repeat previous pattern
+            // on every measure, maybe repeat previous pattern by reusing an old random seed
             if ((beatIndex and 7) == 0) {
                 if (kotlin.random.Random.nextDouble() < 0.5) {
                     pseudo.setSeed(savedSeed)

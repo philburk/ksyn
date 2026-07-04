@@ -1,6 +1,7 @@
 package com.softsynth.ksyn.voices
 
 import com.softsynth.ksyn.AudioSample
+import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.unitgen.UnitSource
 
@@ -36,6 +37,13 @@ interface PitchedVoice : UnitSource {
      * @param timeStamp
      */
     fun setPort(portName: String, value: AudioSample, timeStamp: TimeStamp)
+
+    /**
+     * This is used when connecting pitch modulators.
+     *
+     * @return the port that controls pitch, if there is one
+     */
+    fun getPitchPort() : UnitInputPort?
 
     fun usePreset(presetIndex: Int)
 }

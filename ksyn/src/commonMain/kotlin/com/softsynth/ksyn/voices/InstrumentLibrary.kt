@@ -14,28 +14,16 @@
  * limitations under the License.
  */
 
-package com.softsynth.ksyn.instruments
+package com.softsynth.ksyn.voices
 
-import com.softsynth.ksyn.voices.InstrumentLibrary
 import com.softsynth.ksyn.voices.VoiceDescription
 
 /**
- * Stock instruments provided with the KSyn distribution.
+ * Interface for providing sets of instruments.
  *
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
-object KSynInstrumentLibrary : InstrumentLibrary {
-    private val descriptions = arrayOf(
-        WaveShapingVoice.getVoiceDescription(),
-//        SubtractiveSynthVoice.getVoiceDescription(),
-//        DualOscillatorSynthVoice.getVoiceDescription(),
-//        NoiseHit.getVoiceDescription(),
-//        DrumWoodFM.getVoiceDescription()
-    )
-
-    override val voiceDescriptions: Array<VoiceDescription>
-        get() = descriptions
-
-    override val name: String
-        get() = "KSynInstruments"
+interface InstrumentLibrary {
+    val name: String
+    val voiceDescriptions: Array<com.softsynth.ksyn.voices.VoiceDescription>
 }

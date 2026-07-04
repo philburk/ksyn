@@ -37,8 +37,8 @@ import com.softsynth.ksyn.compose.UnitGeneratorFaders
 import com.softsynth.ksyn.instruments.KSynInstrumentLibrary
 import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.unitgen.LineOut
-import com.softsynth.ksyn.unitgen.UnitVoice
-import com.softsynth.ksyn.util.VoiceDescription
+import com.softsynth.ksyn.voices.PitchedVoice
+import com.softsynth.ksyn.voices.VoiceDescription
 import com.softsynth.ksyn.voices.PolyphonicInstrument
 import com.softsynth.math.AudioMath
 
@@ -49,7 +49,7 @@ class KSynInstrumentsPlayer : KSynPlayable() {
     val numVoices = 4
 
     var polyphonicInstrument: PolyphonicInstrument? = null
-    var voices: Array<UnitVoice>? = null
+    var voices: Array<PitchedVoice>? = null
 
     var activeInstrumentIndex by mutableStateOf(0)
     
@@ -67,7 +67,7 @@ class KSynInstrumentsPlayer : KSynPlayable() {
     val activeVoiceDesc: VoiceDescription
         get() = KSynInstrumentLibrary.voiceDescriptions[activeInstrumentIndex]
 
-//    val activeVoice: UnitVoice
+//    val activeVoice: PitchedVoice
 //        get() = voices?.get(0) ?: throw IllegalStateException("Voices not initialized")
 
     init {
@@ -90,7 +90,7 @@ class KSynInstrumentsPlayer : KSynPlayable() {
 
         // Create a new PolyphonicInstrument
         val newVoices = Array(numVoices) {
-            val voice = activeVoiceDesc.createUnitVoice()
+            val voice = activeVoiceDesc.createPitchedVoice()
             val voiceGen = voice.getUnitGenerator()
             synth.add(voiceGen)
             val ampPort = voiceGen.getPortByName("Amplitude") as? com.softsynth.ksyn.ports.UnitInputPort
@@ -237,7 +237,7 @@ class KSynInstrumentsScreen : Screen {
                     onKeyDown = { noteNumber ->
                         player.polyphonicInstrument?.noteOn(
                             noteNumber,
-                            frequency = AudioMath.pitchToFrequency(noteNumber.toDouble()),
+                            pitch = noteNumber.toDouble(),
                             amplitude = 0.5,
                             timeStamp = TimeStamp(player.synth.currentTime)
                         )

@@ -27,34 +27,39 @@ import com.softsynth.ksyn.unitgen.Circuit
 import com.softsynth.ksyn.unitgen.EnvelopeDAHDSR
 import com.softsynth.ksyn.unitgen.FunctionEvaluator
 import com.softsynth.ksyn.unitgen.Multiply
+import com.softsynth.ksyn.unitgen.PitchToFrequency
 import com.softsynth.ksyn.unitgen.SineOscillator
 import com.softsynth.ksyn.unitgen.UnitVoice
-import com.softsynth.ksyn.util.VoiceDescription
+import com.softsynth.ksyn.voices.VoiceDescription
+import com.softsynth.ksyn.voices.PitchedVoice
 
 /**
  * Waveshaping oscillator with envelopes.
  * 
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
-class WaveShapingVoice : Circuit(), UnitVoice {
+class WaveShapingVoice : Circuit(), PitchedVoice {
+    private val p2f = PitchToFrequency()
     private val osc = SineOscillator()
     private val waveShaper = FunctionEvaluator()
     private val ampEnv = EnvelopeDAHDSR()
     private val rangeEnv = EnvelopeDAHDSR()
-    private val frequencyScaler = Multiply()
 
-    val range: UnitInputPort
-    val frequency: UnitInputPort
+    val pitch: UnitInputPort
     val amplitude: UnitInputPort
+    val range: UnitInputPort
     val function: UnitFunctionPort
-    val pitchModulation: UnitInputPort
 
     init {
-        add(frequencyScaler)
+        add(p2f)
         add(osc)
         add(waveShaper)
         add(rangeEnv)
         add(ampEnv)
+
+        pitch = p2f.input
+        pitch.isValueAdded = true
+        addPort(pitch, "Pitch")
 
         amplitude = ampEnv.amplitude
         addPort(amplitude, "Amplitude")
@@ -64,12 +69,6 @@ class WaveShapingVoice : Circuit(), UnitVoice {
         
         function = waveShaper.function
         addPort(function, "Function")
-        
-        frequency = frequencyScaler.inputA
-        addPort(frequency, "Frequency")
-        
-        pitchModulation = frequencyScaler.inputB
-        addPort(pitchModulation, "PitchMod")
 
         ampEnv.export(this, "Amp")
         rangeEnv.export(this, "Range")
@@ -78,15 +77,14 @@ class WaveShapingVoice : Circuit(), UnitVoice {
         function.set(chebyshevTable)
 
         // Connect units.
+        p2f.output.connect(osc.frequency)
         osc.output.connect(rangeEnv.amplitude)
         rangeEnv.output.connect(waveShaper.input)
         ampEnv.output.connect(waveShaper.amplitude)
-        frequencyScaler.output.connect(osc.frequency)
 
         // Set reasonable defaults for the ports.
-        pitchModulation.setup(0.1, 1.0, 10.0)
+        pitch.setup(0.0, 60.0, 128.0)
         range.setup(0.1, 0.8, 1.0)
-        frequency.setup(osc.frequency)
         amplitude.setup(0.0, 0.5, 1.0)
 
         // Make the circuit turn off when the envelope finishes to reduce CPU load.
@@ -99,9 +97,9 @@ class WaveShapingVoice : Circuit(), UnitVoice {
         return waveShaper.output
     }
 
-    override fun noteOn(freq: Double, amp: Double, timeStamp: TimeStamp) {
-        frequency.set(freq, timeStamp)
-        amplitude.set(amp, timeStamp)
+    override fun noteOn(pitch: Double, amplitude: Double, timeStamp: TimeStamp) {
+        p2f.input.set(pitch, timeStamp)
+        this.amplitude.set(amplitude, timeStamp)
         ampEnv.input.on(timeStamp)
         rangeEnv.input.on(timeStamp)
     }
@@ -109,6 +107,10 @@ class WaveShapingVoice : Circuit(), UnitVoice {
     override fun noteOff(timeStamp: TimeStamp) {
         ampEnv.input.off(timeStamp)
         rangeEnv.input.off(timeStamp)
+    }
+
+    override fun getPitchPort(): UnitInputPort? {
+        return pitch
     }
 
     override fun usePreset(presetIndex: Int) {
@@ -169,7 +171,7 @@ class WaveShapingVoice : Circuit(), UnitVoice {
             
         private val tags = arrayOf("electronic", "waveshaping", "clean")
 
-        override fun createUnitVoice(): UnitVoice {
+        override fun createPitchedVoice(): PitchedVoice {
             return WaveShapingVoice()
         }
 

@@ -26,7 +26,7 @@ interface UnitVoice : UnitSource {
     fun noteOff(timeStamp: TimeStamp)
 
     /**
-     * Looks up a port using its name and sets the value.
+     * Looks up a port using its name then sets the value.
      *
      * @param portName
      * @param value
