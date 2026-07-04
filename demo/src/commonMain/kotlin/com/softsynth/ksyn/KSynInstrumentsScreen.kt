@@ -37,77 +37,79 @@ import com.softsynth.ksyn.compose.UnitGeneratorFaders
 import com.softsynth.ksyn.instruments.KSynInstrumentLibrary
 import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.unitgen.LineOut
-import com.softsynth.ksyn.unitgen.UnitGenerator
 import com.softsynth.ksyn.unitgen.UnitVoice
 import com.softsynth.ksyn.util.VoiceDescription
+import com.softsynth.ksyn.voices.PolyphonicInstrument
+import com.softsynth.math.AudioMath
 
 class KSynInstrumentsPlayer : KSynPlayable() {
     val ksynAudioBridge: KSynAudioBridge
     val synth = KSyn.createSynthesizer()
     val lineOut = LineOut()
+    val numVoices = 4
 
-    private val library = KSynInstrumentLibrary()
-    
-    // We instantiate one copy of each voice from the descriptions
-    val voices: List<Pair<VoiceDescription, UnitVoice>> = library.voiceDescriptions.map { desc ->
-        Pair(desc, desc.createUnitVoice())
-    }
+    var polyphonicInstrument: PolyphonicInstrument? = null
+    var voices: Array<UnitVoice>? = null
 
-    var activeVoiceIndex by mutableStateOf(0)
+    var activeInstrumentIndex by mutableStateOf(0)
     
     // Store the selected preset index for each voice so it isn't lost when switching instruments
     val activePresetIndices = mutableStateListOf<Int>().apply {
-        repeat(voices.size) { add(0) }
+        repeat(KSynInstrumentLibrary.voiceDescriptions.size) { add(0) }
     }
 
     var activePresetIndex: Int
-        get() = activePresetIndices[activeVoiceIndex]
+        get() = activePresetIndices[activeInstrumentIndex]
         set(value) {
-            activePresetIndices[activeVoiceIndex] = value
+            activePresetIndices[activeInstrumentIndex] = value
         }
 
     val activeVoiceDesc: VoiceDescription
-        get() = voices[activeVoiceIndex].first
+        get() = KSynInstrumentLibrary.voiceDescriptions[activeInstrumentIndex]
 
-    val activeVoice: UnitVoice
-        get() = voices[activeVoiceIndex].second
+//    val activeVoice: UnitVoice
+//        get() = voices?.get(0) ?: throw IllegalStateException("Voices not initialized")
 
     init {
         ksynAudioBridge = KSynAudioBridge(synth)
         synth.add(lineOut)
-
-        // Add all voices to the synthesizer to ensure they are available
-        for (voice in voices) {
-            val voiceGen = voice.second as? UnitGenerator
-            if (voiceGen != null) {
-                synth.add(voiceGen)
-                val ampPort = voiceGen.getPortByName("Amplitude") as? com.softsynth.ksyn.ports.UnitInputPort
-                ampPort?.set(0.1)
-            }
-        }
-
         updateRouting()
         lineOut.start()
     }
 
     fun updateRouting() {
         // Disconnect all previous voice mappings to clear the lineOut
-        for (voice in voices) {
-            val output = voice.second.getOutputPort()
-            output.disconnectAll()
+        val currentVoices = voices
+        if (currentVoices != null) {
+            for (voice in currentVoices) {
+                val output = voice.getOutputPort()
+                output.disconnectAll()
+                synth.remove(voice.getUnitGenerator())
+            }
         }
 
-        // Connect the actively selected voice to the stereo LineOut
-        val voiceOutput = activeVoice.getOutputPort()
-        val numParts = voiceOutput.numParts
+        // Create a new PolyphonicInstrument
+        val newVoices = Array(numVoices) {
+            val voice = activeVoiceDesc.createUnitVoice()
+            val voiceGen = voice.getUnitGenerator()
+            synth.add(voiceGen)
+            val ampPort = voiceGen.getPortByName("Amplitude") as? com.softsynth.ksyn.ports.UnitInputPort
+            ampPort?.set(0.1)
+            voice
+        }
+        voices = newVoices
+        polyphonicInstrument = PolyphonicInstrument(synth, newVoices)
+
+        val outputPort = polyphonicInstrument!!.getOutputPort()
+        val numParts = outputPort.numParts
         if (numParts == 1) {
             // Mono: Connect output 0 to both left and right
-            voiceOutput.connect(0, lineOut.input, 0)
-            voiceOutput.connect(0, lineOut.input, 1)
+            outputPort.connect(0, lineOut.input, 0)
+            outputPort.connect(0, lineOut.input, 1)
         } else if (numParts >= 2) {
             // Stereo (or more): Connect output 0 to left, output 1 to right
-            voiceOutput.connect(0, lineOut.input, 0)
-            voiceOutput.connect(1, lineOut.input, 1)
+            outputPort.connect(0, lineOut.input, 0)
+            outputPort.connect(1, lineOut.input, 1)
         }
     }
 
@@ -169,11 +171,11 @@ class KSynInstrumentsScreen : Screen {
                                 expanded = voiceMenuExpanded,
                                 onDismissRequest = { voiceMenuExpanded = false }
                             ) {
-                                player.voices.forEachIndexed { index, pair ->
+                                KSynInstrumentLibrary.voiceDescriptions.forEachIndexed { index, desc ->
                                     DropdownMenuItem(
-                                        text = { Text(pair.first.name) },
+                                        text = { Text(desc.name) },
                                         onClick = {
-                                            player.activeVoiceIndex = index
+                                            player.activeInstrumentIndex = index
                                             // Do NOT reset player.activePresetIndex = 0 here. 
                                             // We want to preserve the preset the instrument is already in.
                                             player.updateRouting()
@@ -217,7 +219,7 @@ class KSynInstrumentsScreen : Screen {
                                         onClick = {
                                             player.activePresetIndex = index
                                             player.synth.queueCommand {
-                                                player.activeVoice.usePreset(index)
+                                                player.polyphonicInstrument?.usePreset(index)
                                             }
                                             presetMenuExpanded = false
                                         }
@@ -232,18 +234,20 @@ class KSynInstrumentsScreen : Screen {
                 
                 // Keyboard Input
                 BlackWhiteKeyboard(
-                    onNoteOn = { frequency ->
-                        player.activeVoice.noteOn(
-                            frequency = frequency,
+                    onKeyDown = { noteNumber ->
+                        player.polyphonicInstrument?.noteOn(
+                            noteNumber,
+                            frequency = AudioMath.pitchToFrequency(noteNumber.toDouble()),
                             amplitude = 0.5,
                             timeStamp = TimeStamp(player.synth.currentTime)
                         )
                     },
-                    onNoteOff = {
-                        player.activeVoice.noteOff(
+                    onKeyUp = { noteNumber ->
+                        player.polyphonicInstrument?.noteOff(noteNumber,
                             timeStamp = TimeStamp(player.synth.currentTime)
                         )
-                    }
+                    },
+                    numNotes = 25
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -252,10 +256,10 @@ class KSynInstrumentsScreen : Screen {
                 // Wrap in a Column/Box that limits size or allows scrolling natively if preferred.
                 // Using weight to let the faders take available remaining vertical space while keeping the keyboard visible.
                 Box(modifier = Modifier.weight(1f)) {
-                    val activeGenerator = player.activeVoice as? UnitGenerator
+                    val activeGenerator = player.polyphonicInstrument
                     if (activeGenerator != null) {
                         UnitGeneratorFaders(
-                            unitGenerator = activeGenerator,
+                            unitGenerator = activeGenerator.getUnitGenerator(),
                             presetKey = player.activePresetIndex,
                             modifier = Modifier.fillMaxSize()
                         )

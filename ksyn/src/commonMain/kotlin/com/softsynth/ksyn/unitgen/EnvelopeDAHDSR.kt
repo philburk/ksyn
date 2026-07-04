@@ -72,6 +72,7 @@ class EnvelopeDAHDSR : UnitGate() {
         decay.set(0, 0.2f)
         sustain.set(0.5f)
         release.set(0.3f)
+        release.maximum = 15.0f
         amplitude.set(1.0f)
     }
 

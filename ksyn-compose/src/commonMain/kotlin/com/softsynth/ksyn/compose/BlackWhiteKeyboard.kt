@@ -25,8 +25,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.softsynth.math.AudioMath
-import kotlin.math.round
 
 /**
  * A visual 1-octave keyboard widget laid out like a real piano.
@@ -34,23 +32,14 @@ import kotlin.math.round
 @Composable
 fun BlackWhiteKeyboard(
     modifier: Modifier = Modifier.Companion,
-    onNoteOn: (frequency: Double) -> Unit,
-    onNoteOff: () -> Unit
+    onKeyDown: (noteNumber: Int) -> Unit,
+    onKeyUp: (noteNumber: Int) -> Unit,
+    numNotes: Int = 13, // Generally 12*N+1
+    startingNote: Int = 48 // Middle C is 60. Must be multiple of 8
 ) {
-    var lastNote by remember { mutableStateOf("None") }
-    var lastFreq by remember { mutableStateOf(0.0) }
-
-    // White keys (index relative to C = 0)
-    val whiteKeys = listOf(
-        Pair("C", 0), Pair("D", 2), Pair("E", 4), Pair("F", 5),
-        Pair("G", 7), Pair("A", 9), Pair("B", 11), Pair("C", 12)
-    )
-
-    // Black keys (note, index, and which white key it follows, 1-indexed)
-    val blackKeys = listOf(
-        Triple("C#", 1, 1), Triple("D#", 3, 2),
-        Triple("F#", 6, 4), Triple("G#", 8, 5), Triple("A#", 10, 6)
-    )
+    var lastNoteName by remember { mutableStateOf("None") }
+    var lastNoteNumber by remember { mutableStateOf(0) }
+    val noteNames = arrayOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
     val whiteKeyWidth = 48.dp
     val blackKeyWidth = 32.dp
@@ -59,9 +48,8 @@ fun BlackWhiteKeyboard(
         modifier = modifier.fillMaxWidth().padding(16.dp),
         horizontalAlignment = Alignment.Companion.CenterHorizontally
     ) {
-        val freqStr = if (lastFreq > 0) "${round(lastFreq * 100) / 100.0} Hz" else "--- Hz"
         Text(
-            text = "Last Pressed: $lastNote | $freqStr",
+            text = "Last Pressed: $lastNoteName | $lastNoteNumber",
             style = MaterialTheme.typography.titleMedium,
             modifier = Modifier.Companion.padding(bottom = 16.dp)
         )
@@ -69,55 +57,66 @@ fun BlackWhiteKeyboard(
         Box(modifier = Modifier.Companion.wrapContentSize()) {
             // White keys
             Row {
-                for (note in whiteKeys) {
-                    PianoKey(
-                        note = note.first,
-                        index = note.second,
-                        isBlack = false,
-                        width = whiteKeyWidth,
-                        height = 140.dp,
-                        onNoteOn = { freq ->
-                            lastNote = note.first
-                            lastFreq = freq
-                            onNoteOn(freq)
-                        },
-                        onNoteOff = onNoteOff
-                    )
+                for (i in 0..<numNotes) {
+                    val keyIndex = i % 12
+                    val noteName = noteNames[keyIndex]
+                    if (noteName.length == 1) {
+                        PianoKey(
+                            noteName = noteName,
+                            index = i + startingNote,
+                            isBlack = false,
+                            width = whiteKeyWidth,
+                            height = 140.dp,
+                            onKeyDown = { noteNumber ->
+                                lastNoteName = noteName
+                                lastNoteNumber = noteNumber
+                                onKeyDown(noteNumber)
+                            },
+                            onKeyUp = onKeyUp
+                        )
+                    }
                 }
             }
-            // Black keys overlay
-            for (note in blackKeys) {
-                Box(
-                    modifier = Modifier.Companion.offset(x = (whiteKeyWidth * note.third) - (blackKeyWidth / 2))
-                ) {
-                    PianoKey(
-                        note = note.first,
-                        index = note.second,
-                        isBlack = true,
-                        width = blackKeyWidth,
-                        height = 90.dp,
-                        onNoteOn = { freq ->
-                            lastNote = note.first
-                            lastFreq = freq
-                            onNoteOn(freq)
-                        },
-                        onNoteOff = onNoteOff
-                    )
+            var whiteKeyCount = 0
+            for (i in 0..<numNotes) {
+                val keyIndex = i % 12
+                val noteName = noteNames[keyIndex]
+                if (noteName.length == 1) {
+                    whiteKeyCount++
+                } else { // Black key overlay.
+                    Box(
+                        modifier = Modifier.Companion.offset(x = (whiteKeyWidth * whiteKeyCount) - (blackKeyWidth / 2))
+                    ) {
+                        PianoKey(
+                            noteName = noteName,
+                            index = i + startingNote,
+                            isBlack = true,
+                            width = blackKeyWidth,
+                            height = 90.dp,
+                            onKeyDown = { noteNumber ->
+                                lastNoteName = noteName
+                                lastNoteNumber = noteNumber
+                                onKeyDown(noteNumber)
+                            },
+                            onKeyUp = onKeyUp
+                        )
+                    }
                 }
             }
         }
     }
 }
 
+
 @Composable
 fun PianoKey(
-    note: String,
+    noteName: String,
     index: Int,
     isBlack: Boolean,
     width: Dp,
     height: Dp,
-    onNoteOn: (Double) -> Unit,
-    onNoteOff: () -> Unit
+    onKeyDown: (noteNumber: Int) -> Unit,
+    onKeyUp: (noteNumber: Int) -> Unit
 ) {
     Box(
         modifier = Modifier.Companion
@@ -127,17 +126,16 @@ fun PianoKey(
             .pointerInput(index) {
                 detectTapGestures(
                     onPress = {
-                        val freq = AudioMath.pitchToFrequency(48.0 + index)
-                        onNoteOn(freq)
+                        onKeyDown(index)
                         tryAwaitRelease()
-                        onNoteOff()
+                        onKeyUp(index)
                     }
                 )
             },
         contentAlignment = Alignment.Companion.BottomCenter
     ) {
         Text(
-            text = note,
+            text = noteName,
             fontWeight = FontWeight.Companion.Bold,
             color = if (isBlack) Color.Companion.White else Color.Companion.Black,
             modifier = Modifier.Companion.padding(bottom = 8.dp)

@@ -63,10 +63,10 @@ class PlaySamplePlayer : KSynPlayable() {
         }
     }
 
-    fun playNote(frequency: Double) {
+    fun playNote(pitch: Double) {
         val loadedSample = sample ?: return
-        val baseFreq = AudioMath.pitchToFrequency(60.0) // Middle C assumption
-        val rateScaler = frequency / baseFreq
+        val sampleFreq = AudioMath.pitchToFrequency(60.0) // Middle C assumption
+        val rateScaler = AudioMath.pitchToFrequency(pitch) / sampleFreq
         val targetRate = loadedSample.frameRate * rateScaler
         currentRate = rateScaler
 
@@ -126,12 +126,13 @@ class PlaySampleScreen : Screen {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 BlackWhiteKeyboard(
-                    onNoteOn = { frequency ->
-                        if (isPlaying) player.playNote(frequency)
+                    onKeyDown = { noteNumber ->
+                        if (isPlaying) player.playNote(noteNumber.toDouble())
                     },
-                    onNoteOff = {
+                    onKeyUp = { noteNumber ->
                         if (isPlaying) player.stopNote()
-                    }
+                    },
+                    numNotes = 25
                 )
             }
         }

@@ -31,11 +31,7 @@ import com.softsynth.ksyn.data.SegmentedEnvelope
 import com.softsynth.ksyn.unitgen.LineOut
 import com.softsynth.ksyn.unitgen.SawtoothOscillatorDPW
 import com.softsynth.ksyn.unitgen.VariableRateMonoReader
-import com.softsynth.ksyn.util.SampleLoader
 import com.softsynth.math.AudioMath
-import ksyn_project.demo.generated.resources.Res
-import org.jetbrains.compose.resources.ExperimentalResourceApi
-import kotlin.math.round
 
 class PlayEnvelopePlayer : KSynPlayable() {
     val ksynAudioBridge: KSynAudioBridge
@@ -71,9 +67,9 @@ class PlayEnvelopePlayer : KSynPlayable() {
         ampEnvelope.sustainEnd = 2
     }
 
-    fun playNote(frequency: Double) {
+    fun playNote(pitch: Double) {
         synth.queueCommand {
-            sawOsc.frequency.set(frequency)
+            sawOsc.frequency.set(AudioMath.pitchToFrequency(pitch))
             envelopeReader.dataQueue.queueOn(ampEnvelope)
         }
     }
@@ -101,6 +97,7 @@ class PlayEnvelopeScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val player = remember { PlayEnvelopePlayer() }
         var isPlaying by remember { mutableStateOf(false) }
+
         LaunchedEffect(Unit) {
             if (player.start() == AudioResult.OK) isPlaying = true
         }
@@ -141,12 +138,13 @@ class PlayEnvelopeScreen : Screen {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 BlackWhiteKeyboard(
-                    onNoteOn = { frequency ->
-                        if (isPlaying) player.playNote(frequency)
+                    onKeyDown = { noteNumber ->
+                        if (isPlaying) player.playNote(noteNumber.toDouble())
                     },
-                    onNoteOff = {
+                    onKeyUp = { noteNumber ->
                         if (isPlaying) player.stopNote()
-                    }
+                    },
+                    numNotes = 25
                 )
             }
         }

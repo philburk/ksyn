@@ -25,7 +25,7 @@ import com.softsynth.ksyn.util.VoiceDescription
  *
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
-class KSynInstrumentLibrary : InstrumentLibrary {
+object KSynInstrumentLibrary : InstrumentLibrary {
     private val descriptions = arrayOf(
         WaveShapingVoice.getVoiceDescription(),
         SubtractiveSynthVoice.getVoiceDescription(),
