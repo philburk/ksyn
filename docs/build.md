@@ -42,6 +42,9 @@ in your IDE's toolbar or run it directly from the terminal:
 
 ### Publish to Maven Local
 
+You can find the version numbers in "ksyn/build.gradle.kts" and in "ksyn/src/commonMain/kotlin/com/softsynth/ksyn/KSyn.kt".
+If you are just using KSyn then do not change these numbers.
+
 ```
 ./gradlew :ksyn:publishToMavenLocal
 ```
