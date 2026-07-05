@@ -16,7 +16,7 @@
 
 package com.softsynth.ksyn.util
 
-import com.softsynth.ksyn.instruments.SubtractiveSynthVoice
+import com.softsynth.ksyn.instruments.DualOscillatorSynthVoice
 import com.softsynth.ksyn.unitgen.UnitVoice
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -33,7 +33,7 @@ class TestVoiceAllocator {
     fun beforeEach() {
         val synth = com.softsynth.ksyn.engine.SynthesisEngine()
         voices = Array<UnitVoice>(max) { 
-            val v = SubtractiveSynthVoice() 
+            val v = DualOscillatorSynthVoice()
             synth.add(v)
             v 
         }

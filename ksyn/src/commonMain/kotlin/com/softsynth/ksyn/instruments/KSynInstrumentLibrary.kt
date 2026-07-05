@@ -27,7 +27,7 @@ import com.softsynth.ksyn.voices.VoiceDescription
 object KSynInstrumentLibrary : InstrumentLibrary {
     private val descriptions = arrayOf(
         WaveShapingVoice.getVoiceDescription(),
-//        SubtractiveSynthVoice.getVoiceDescription(),
+        SubtractiveSynthVoice.getVoiceDescription(),
 //        DualOscillatorSynthVoice.getVoiceDescription(),
 //        NoiseHit.getVoiceDescription(),
 //        DrumWoodFM.getVoiceDescription()
