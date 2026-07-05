@@ -28,7 +28,7 @@ object KSynInstrumentLibrary : InstrumentLibrary {
     private val descriptions = arrayOf(
         WaveShapingVoice.getVoiceDescription(),
         SubtractiveSynthVoice.getVoiceDescription(),
-//        DualOscillatorSynthVoice.getVoiceDescription(),
+        DualOscillatorSynthVoice.getVoiceDescription(),
 //        NoiseHit.getVoiceDescription(),
 //        DrumWoodFM.getVoiceDescription()
     )
