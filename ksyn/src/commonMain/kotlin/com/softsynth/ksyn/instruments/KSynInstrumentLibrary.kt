@@ -29,8 +29,8 @@ object KSynInstrumentLibrary : InstrumentLibrary {
         WaveShapingVoice.getVoiceDescription(),
         SubtractiveSynthVoice.getVoiceDescription(),
         DualOscillatorSynthVoice.getVoiceDescription(),
-//        NoiseHit.getVoiceDescription(),
-//        DrumWoodFM.getVoiceDescription()
+        NoiseHit.getVoiceDescription(),
+        DrumWoodFM.getVoiceDescription()
     )
 
     override val voiceDescriptions: Array<VoiceDescription>

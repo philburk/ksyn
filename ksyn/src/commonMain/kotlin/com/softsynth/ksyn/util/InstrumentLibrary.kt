@@ -19,6 +19,7 @@ package com.softsynth.ksyn.util
 /**
  * Interface for providing sets of instruments.
  *
+ * @deprecated Use classes in com.softsynth.ksyn.voices instead
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
 interface InstrumentLibrary {

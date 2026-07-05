@@ -61,10 +61,10 @@ object KSyn {
     // The version numbers were reset when porting form JSyn to KSyn.
     // The version numbers here should match the version in build.gradle.kts
     private const val VERSION_MAJOR = 1
-    private const val VERSION_MINOR = 1
-    private const val VERSION_REVISION = 1
-    const val BUILD_NUMBER: Int = 468
-    private val BUILD_DATE = "2026-06-24"
+    private const val VERSION_MINOR = 2
+    private const val VERSION_REVISION = 0
+    const val BUILD_NUMBER: Int = 469
+    private val BUILD_DATE = "2026-07-05"
 
     // These are built from the updated values.
     val VERSION: String = (VERSION_MAJOR.toString() + "." + VERSION_MINOR + "."

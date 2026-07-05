@@ -28,6 +28,7 @@ import com.softsynth.ksyn.shared.time.TimeStamp
 /**
  * The API for this class is likely to change. Please comment on its usefulness.
  *
+ * @deprecated Use classes in com.softsynth.ksyn.voices instead
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
 open class PolyphonicInstrument(val voices: Array<UnitVoice>) : Circuit(), UnitSource, Instrument {

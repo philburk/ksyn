@@ -20,7 +20,8 @@ import com.softsynth.ksyn.unitgen.UnitVoice
 
 /**
  * Describe a voice so that a user can pick it out of an InstrumentLibrary.
- * 
+ *
+ * @deprecated Use classes in com.softsynth.ksyn.voices instead
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
 abstract class VoiceDescription(var name: String, val presetNames: Array<String>) {
