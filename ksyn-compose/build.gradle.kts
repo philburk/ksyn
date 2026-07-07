@@ -9,7 +9,7 @@ plugins {
 
 group = "com.softsynth.ksyn.compose"
 // The version numbers here should match the version in KSyn.kts
-version = "1.1.1"
+version = "1.2.0"
 
 kotlin {
 
