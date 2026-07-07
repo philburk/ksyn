@@ -26,6 +26,7 @@ import com.softsynth.ksyn.unitgen.UnitGenerator
  * tag could be an int that always increments. Use the same tag to refer to a voice for noteOn() and
  * noteOff(). If no new voices are available then a voice in use will be stolen.
  *
+ * @deprecated Use classes in com.softsynth.ksyn.voices instead
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
 open class VoiceAllocator(val voices: Array<UnitVoice>) : Instrument {
@@ -142,9 +143,9 @@ open class VoiceAllocator(val voices: Array<UnitVoice>) : Instrument {
         return null
     }
 
-    /** Turn off all the note currently on. */
+    /** Turn off all the notes currently on. */
     override fun allNotesOff(timeStamp: TimeStamp?) {
-        synthesizer.queueCommand {
+            synthesizer.queueCommand {
             for (tracker in trackers) {
                 if (tracker.on) {
                     val ts = timeStamp ?: synthesizer.createTimeStamp()

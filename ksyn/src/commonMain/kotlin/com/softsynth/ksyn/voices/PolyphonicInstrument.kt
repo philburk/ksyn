@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.softsynth.ksyn.util
+package com.softsynth.ksyn.voices
 
+import com.softsynth.ksyn.Synthesizer
 import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.ports.UnitOutputPort
 import com.softsynth.ksyn.unitgen.Circuit
@@ -24,37 +25,53 @@ import com.softsynth.ksyn.unitgen.PassThrough
 import com.softsynth.ksyn.unitgen.UnitSource
 import com.softsynth.ksyn.unitgen.UnitVoice
 import com.softsynth.ksyn.shared.time.TimeStamp
+import com.softsynth.ksyn.toSample
+import com.softsynth.ksyn.util.Instrument
+import com.softsynth.ksyn.util.VoiceAllocator
 
 /**
  * The API for this class is likely to change. Please comment on its usefulness.
  *
- * @deprecated Use classes in com.softsynth.ksyn.voices instead
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
-open class PolyphonicInstrument(val voices: Array<UnitVoice>) : Circuit(), UnitSource, Instrument {
+open class PolyphonicInstrument(val synth: Synthesizer, val voices: Array<PitchedVoice>) : Circuit(), UnitSource, Instrument {
     private val mixer: Multiply
-    private val voiceAllocator: VoiceAllocator
+    private val pitchPassthrough: PassThrough
+    private val voiceAllocator: OnOffAllocator<PitchedVoice>
     val amplitude: UnitInputPort
+    val pitchOffset: UnitInputPort
 
     init {
-        voiceAllocator = VoiceAllocator(voices)
+        voiceAllocator = OnOffAllocator<PitchedVoice>(voices)
         mixer = Multiply()
+        pitchPassthrough = PassThrough()
+        add(pitchPassthrough)
         add(mixer)
+
+        pitchOffset = pitchPassthrough.input
+        addPort(pitchOffset, "PitchOffset")
+        pitchOffset.setup(-2.0, 0.0, 2.0)
+
+        amplitude = mixer.inputB
+        addPort(amplitude, "Amplitude")
+        amplitude.setup(0.0001, 0.4, 2.0)
         
-        // Mix all the voices to one output.
+        // Mix all the voices to one output using port mixing.
         for (voice in voices) {
             val unit = voice.getUnitGenerator()
             val wasEnabled = unit.isEnabled
             // This overrides the enabled property of the voice.
             add(unit)
             voice.getOutputPort().connect(mixer.inputA)
+            val pitchPort = voice.getPitchPort()
+            if (pitchPort != null) {
+                pitchPassthrough.output.connect(pitchPort)
+                pitchPort.isValueAdded = true
+            }
             // restore
             unit.isEnabled = wasEnabled
         }
 
-        amplitude = mixer.inputB
-        addPort(amplitude, "Amplitude")
-        amplitude.setup(0.0001, 0.4, 2.0)
         exportAllInputPorts()
     }
 
@@ -70,7 +87,7 @@ open class PolyphonicInstrument(val voices: Array<UnitVoice>) : Circuit(), UnitS
             if (port is UnitInputPort) {
                 val voicePortName = port.name
                 // FIXME Need better way to identify ports that are per note.
-                if (voicePortName != "Frequency" && voicePortName != "Amplitude") {
+                if (voicePortName != "Pitch" && voicePortName != "Amplitude") {
                     exportNamedInputPort(voicePortName)
                 }
             }
@@ -127,20 +144,42 @@ open class PolyphonicInstrument(val voices: Array<UnitVoice>) : Circuit(), UnitS
         usePreset(presetIndex)
     }
 
-    override fun noteOn(tag: Int, frequency: Double, amplitude: Double, timeStamp: TimeStamp?) {
-        voiceAllocator.noteOn(tag, frequency, amplitude, timeStamp)
+    override fun noteOn(tag: Int, pitch: Double, amplitude: Double, timeStamp: TimeStamp?) {
+        synth.queueCommand {
+            val voice = voiceAllocator.on(tag)
+            val ts: TimeStamp = (timeStamp ?: synth.currentTime) as TimeStamp
+            voice.noteOn(pitch, amplitude, ts)
+            voice.setPort("Range", 0.7.toSample(), ts)
+        }
     }
 
     override fun noteOff(tag: Int, timeStamp: TimeStamp?) {
-        voiceAllocator.noteOff(tag, timeStamp)
+        synth.queueCommand {
+            val voice: PitchedVoice? = voiceAllocator.off(tag)
+            val ts: TimeStamp = (timeStamp ?: synth.currentTime) as TimeStamp
+            voice?.noteOff(ts) // TODO use nonscheduled noteOff?
+        }
     }
 
     override fun setPort(tag: Int, portName: String, value: Double, timeStamp: TimeStamp?) {
-        voiceAllocator.setPort(tag, portName, value, timeStamp)
+        synth.queueCommand {
+            val voice = voiceAllocator.findVoice(tag)
+            if (voice != null) {
+                val ts: TimeStamp = (timeStamp ?: synth.currentTime) as TimeStamp
+                voice.setPort(portName, value.toFloat(), ts)
+            }
+        }
     }
 
     override fun allNotesOff(timeStamp: TimeStamp?) {
-        voiceAllocator.allNotesOff(timeStamp)
+        synth.queueCommand {
+            voiceAllocator.allOff()
+        }
+
+        val ts: TimeStamp = (timeStamp ?: synth.currentTime) as TimeStamp
+        for (voice in voices) {
+            voice.noteOff(ts)
+        }
     }
 
     // synchronized not strictly needed here since VoiceAllocator isn't explicitly synchronized,

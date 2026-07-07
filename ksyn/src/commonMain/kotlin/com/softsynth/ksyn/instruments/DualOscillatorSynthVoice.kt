@@ -26,16 +26,17 @@ import com.softsynth.ksyn.unitgen.EnvelopeDAHDSR
 import com.softsynth.ksyn.unitgen.FilterFourPoles
 import com.softsynth.ksyn.unitgen.MorphingOscillatorBL
 import com.softsynth.ksyn.unitgen.Multiply
+import com.softsynth.ksyn.unitgen.PitchToFrequency
 import com.softsynth.ksyn.unitgen.UnitGenerator
-import com.softsynth.ksyn.unitgen.UnitVoice
-import com.softsynth.ksyn.util.VoiceDescription
+import com.softsynth.ksyn.voices.PitchedVoice
+import com.softsynth.ksyn.voices.VoiceDescription
 
 /**
  * Synthesizer voice with two morphing oscillators and a four-pole resonant filter.
  * Modulate the amplitude and filter using DAHDSR envelopes.
  */
-class DualOscillatorSynthVoice : Circuit(), UnitVoice {
-    private val frequencyMultiplier = Multiply()
+class DualOscillatorSynthVoice : Circuit(), PitchedVoice {
+    private val p2f = PitchToFrequency()
     private val amplitudeMultiplier = Multiply()
     private val detuneScaler1 = Multiply()
     private val detuneScaler2 = Multiply()
@@ -47,14 +48,9 @@ class DualOscillatorSynthVoice : Circuit(), UnitVoice {
     private val filterEnv = EnvelopeDAHDSR()
     private val cutoffAdder = Add()
 
+    val pitch: UnitInputPort
     val amplitude: UnitInputPort
-    val frequency: UnitInputPort
-    
-    /**
-     * This scales the frequency value. You can use this to modulate a group of instruments using a
-     * shared LFO and they will stay in tune. Set to 1.0 for no modulation.
-     */
-    val frequencyScaler: UnitInputPort
+
     val oscShape1: UnitInputPort
     val oscShape2: UnitInputPort
     val cutoff: UnitInputPort
@@ -62,7 +58,7 @@ class DualOscillatorSynthVoice : Circuit(), UnitVoice {
     val Q: UnitInputPort
 
     init {
-        add(frequencyMultiplier)
+        add(p2f)
         add(amplitudeMultiplier)
         add(amplitudeBoost)
         add(detuneScaler1)
@@ -74,10 +70,10 @@ class DualOscillatorSynthVoice : Circuit(), UnitVoice {
         add(filter)
         add(cutoffAdder)
 
+        p2f.output.connect(detuneScaler1.inputA)
+        p2f.output.connect(detuneScaler2.inputA)
         filterEnv.output.connect(cutoffAdder.inputA)
         cutoffAdder.output.connect(filter.frequency)
-        frequencyMultiplier.output.connect(detuneScaler1.inputA)
-        frequencyMultiplier.output.connect(detuneScaler2.inputA)
         detuneScaler1.output.connect(osc1.frequency)
         detuneScaler2.output.connect(osc2.frequency)
         osc1.output.connect(amplitudeMultiplier.inputA) // mix oscillators
@@ -88,10 +84,12 @@ class DualOscillatorSynthVoice : Circuit(), UnitVoice {
 
         amplitude = amplitudeMultiplier.inputB
         addPort(amplitude, UnitGenerator.PORT_NAME_AMPLITUDE)
-        
-        frequency = frequencyMultiplier.inputA
-        addPort(frequency, UnitGenerator.PORT_NAME_FREQUENCY)
-        
+
+        pitch = p2f.input
+        pitch.isValueAdded = true
+        pitch.setup(0.0, 60.0, 128.0)
+        addPort(pitch, "Pitch")
+
         oscShape1 = osc1.shape
         addPort(oscShape1, "OscShape1")
         
@@ -104,18 +102,13 @@ class DualOscillatorSynthVoice : Circuit(), UnitVoice {
         
         Q = filter.Q
         addPort(Q, "Q")
-        
-        frequencyScaler = frequencyMultiplier.inputB
-        addPort(frequencyScaler, UnitGenerator.PORT_NAME_FREQUENCY_SCALER)
-        
+
         filterEnvDepth = filterEnv.amplitude
         addPort(filterEnvDepth, "FilterEnvDepth")
 
         filterEnv.export(this, "Filter")
         ampEnv.export(this, "Amp")
 
-        frequency.setup(osc1.frequency)
-        frequencyScaler.setup(0.2, 1.0, 4.0)
         cutoff.setup(filter.frequency)
         
         // Allow negative filter sweeps
@@ -169,15 +162,19 @@ class DualOscillatorSynthVoice : Circuit(), UnitVoice {
         filterEnv.input.off(timeStamp)
     }
 
-    override fun noteOn(freq: Double, ampl: Double, timeStamp: TimeStamp) {
-        frequency.set(freq, timeStamp)
-        amplitude.set(ampl, timeStamp)
+    override fun noteOn(pitch: Double, amplitude: Double, timeStamp: TimeStamp) {
+        p2f.input.set(pitch, timeStamp)
+        this.amplitude.set(amplitude, timeStamp)
         ampEnv.input.on(timeStamp)
         filterEnv.input.on(timeStamp)
     }
 
     override fun getOutputPort(): UnitOutputPort {
         return ampEnv.output
+    }
+
+    override fun getPitchPort(): UnitInputPort? {
+        return pitch
     }
 
     // Reset to basic voice.
@@ -281,7 +278,7 @@ class DualOscillatorSynthVoice : Circuit(), UnitVoice {
             
         private val tags = arrayOf("electronic", "filter", "analog", "subtractive")
 
-        override fun createUnitVoice(): UnitVoice {
+        override fun createPitchedVoice(): PitchedVoice {
             return DualOscillatorSynthVoice()
         }
 

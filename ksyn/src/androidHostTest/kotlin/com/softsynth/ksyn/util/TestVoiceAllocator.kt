@@ -16,13 +16,33 @@
 
 package com.softsynth.ksyn.util
 
-import com.softsynth.ksyn.instruments.SubtractiveSynthVoice
+import com.softsynth.ksyn.ports.UnitOutputPort
+import com.softsynth.ksyn.shared.time.TimeStamp
+import com.softsynth.ksyn.unitgen.Circuit
+import com.softsynth.ksyn.unitgen.PinkNoise
 import com.softsynth.ksyn.unitgen.UnitVoice
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+
+/** Minimal UnitVoice for exercising VoiceAllocator without a real instrument. */
+private class FakeVoice : Circuit(), UnitVoice {
+    private val noise = PinkNoise()
+
+    init {
+        add(noise)
+    }
+
+    override fun getOutputPort(): UnitOutputPort = noise.output
+
+    override fun noteOn(frequency: Double, amplitude: Double, timeStamp: TimeStamp) {}
+
+    override fun noteOff(timeStamp: TimeStamp) {}
+
+    override fun usePreset(presetIndex: Int) {}
+}
 
 class TestVoiceAllocator {
     private lateinit var allocator: VoiceAllocator
@@ -32,10 +52,10 @@ class TestVoiceAllocator {
     @BeforeTest
     fun beforeEach() {
         val synth = com.softsynth.ksyn.engine.SynthesisEngine()
-        voices = Array<UnitVoice>(max) { 
-            val v = SubtractiveSynthVoice() 
+        voices = Array<UnitVoice>(max) {
+            val v = FakeVoice()
             synth.add(v)
-            v 
+            v
         }
         allocator = VoiceAllocator(voices)
     }

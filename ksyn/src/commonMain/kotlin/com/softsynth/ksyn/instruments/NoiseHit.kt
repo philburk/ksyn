@@ -16,18 +16,19 @@
 
 package com.softsynth.ksyn.instruments
 
+import com.softsynth.ksyn.ports.UnitInputPort
 import com.softsynth.ksyn.ports.UnitOutputPort
 import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.unitgen.Circuit
 import com.softsynth.ksyn.unitgen.EnvelopeAttackDecay
 import com.softsynth.ksyn.unitgen.PinkNoise
-import com.softsynth.ksyn.unitgen.UnitVoice
-import com.softsynth.ksyn.util.VoiceDescription
+import com.softsynth.ksyn.voices.PitchedVoice
+import com.softsynth.ksyn.voices.VoiceDescription
 
 /**
  * Cheap synthetic cymbal sound.
  */
-class NoiseHit : Circuit(), UnitVoice {
+class NoiseHit : Circuit(), PitchedVoice {
     private val ampEnv = EnvelopeAttackDecay()
     private val noise = PinkNoise()
 
@@ -48,13 +49,17 @@ class NoiseHit : Circuit(), UnitVoice {
     override fun noteOff(timeStamp: TimeStamp) {
     }
 
-    override fun noteOn(freq: Double, ampl: Double, timeStamp: TimeStamp) {
-        noise.amplitude.set(ampl, timeStamp)
+    override fun noteOn(pitch: Double, amplitude: Double, timeStamp: TimeStamp) {
+        noise.amplitude.set(amplitude, timeStamp)
         ampEnv.input.trigger(timeStamp)
     }
 
     override fun getOutputPort(): UnitOutputPort {
         return ampEnv.output
+    }
+
+    override fun getPitchPort(): UnitInputPort? {
+        return null
     }
 
     override fun usePreset(presetIndex: Int) {
@@ -90,7 +95,7 @@ class NoiseHit : Circuit(), UnitVoice {
             
         private val tags = arrayOf("electronic", "noise")
 
-        override fun createUnitVoice(): UnitVoice {
+        override fun createPitchedVoice(): PitchedVoice {
             return NoiseHit()
         }
 

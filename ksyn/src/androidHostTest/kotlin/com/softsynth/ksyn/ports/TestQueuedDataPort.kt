@@ -239,7 +239,7 @@ class TestQueuedDataPort {
     fun testQueueSustainHold() = runBlocking {
         val dataQueue = setupFloatSample()
 
-        floatSample.sustainBegin = 1
+        floatSample.sustainBegin = 2
         floatSample.sustainEnd = 2
         floatSample.releaseBegin = -1
         floatSample.releaseEnd = -1
@@ -247,13 +247,13 @@ class TestQueuedDataPort {
         dataQueue.queueOn(floatSample, synth.createTimeStamp())
         sleepUntil(synth.currentTime + 0.01)
 
-        checkQueuedData(floatData, dataQueue, 0, 4)
+        checkQueuedData(floatData, dataQueue, 0, 2)
         assertFalse(dataQueue.hasMore(), "should be holding in place")
 
         dataQueue.queueOff(floatSample, true)
         sleepUntil(synth.currentTime + 0.01)
 
-        checkQueuedData(floatData, dataQueue, 1, 7) // release
+        checkQueuedData(floatData, dataQueue, 2, 6) // release
         assertFalse(dataQueue.hasMore(), "end empty")
     }
 

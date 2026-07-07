@@ -8,8 +8,8 @@ plugins {
 }
 
 group = "com.softsynth.ksyn"
-// The version numbers here should match the version in KSyn.kts
-version = "1.1.1"
+// The version numbers here should match the version in KSyn.kt
+version = "1.2.0"
 
 kotlin {
 

@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package com.softsynth.ksyn.util
+package com.softsynth.ksyn.voices
+
+import com.softsynth.ksyn.voices.VoiceDescription
 
 /**
  * Interface for providing sets of instruments.
  *
- * @deprecated Use classes in com.softsynth.ksyn.voices instead
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
 interface InstrumentLibrary {
     val name: String
-    val voiceDescriptions: Array<VoiceDescription>
+    val voiceDescriptions: Array<com.softsynth.ksyn.voices.VoiceDescription>
 }

@@ -24,9 +24,10 @@ import com.softsynth.ksyn.unitgen.Circuit
 import com.softsynth.ksyn.unitgen.EnvelopeDAHDSR
 import com.softsynth.ksyn.unitgen.FilterLowPass
 import com.softsynth.ksyn.unitgen.Multiply
+import com.softsynth.ksyn.unitgen.PitchToFrequency
 import com.softsynth.ksyn.unitgen.SawtoothOscillatorBL
-import com.softsynth.ksyn.unitgen.UnitVoice
-import com.softsynth.ksyn.util.VoiceDescription
+import com.softsynth.ksyn.voices.PitchedVoice
+import com.softsynth.ksyn.voices.VoiceDescription
 
 /**
  * Typical synthesizer voice with one oscillator and a biquad resonant filter. Modulate the amplitude and
@@ -34,7 +35,8 @@ import com.softsynth.ksyn.util.VoiceDescription
  *
  * @author Phil Burk (C) 2010 Mobileer Inc
  */
-class SubtractiveSynthVoice : Circuit(), UnitVoice {
+class SubtractiveSynthVoice : Circuit(), PitchedVoice {
+    private val p2f = PitchToFrequency()
     private val osc = SawtoothOscillatorBL()
     private val filter = FilterLowPass()
     private val ampEnv = EnvelopeDAHDSR()
@@ -42,9 +44,9 @@ class SubtractiveSynthVoice : Circuit(), UnitVoice {
     private val cutoffAdder = Add()
     private val frequencyScaler = Multiply()
 
+    val pitch: UnitInputPort
     val amplitude: UnitInputPort
-    val frequency: UnitInputPort
-    
+
     /**
      * This scales the frequency value. You can use this to modulate a group of instruments using a
      * shared LFO and they will stay in tune.
@@ -55,6 +57,7 @@ class SubtractiveSynthVoice : Circuit(), UnitVoice {
     val Q: UnitInputPort
 
     init {
+        add(p2f)
         add(frequencyScaler)
         add(osc)
         add(ampEnv)
@@ -62,34 +65,36 @@ class SubtractiveSynthVoice : Circuit(), UnitVoice {
         add(filter)
         add(cutoffAdder)
 
+        p2f.output.connect(frequencyScaler.inputA)
         filterEnv.output.connect(cutoffAdder.inputA)
         cutoffAdder.output.connect(filter.frequency)
         frequencyScaler.output.connect(osc.frequency)
         osc.output.connect(filter.input)
         filter.output.connect(ampEnv.amplitude)
 
+        pitch = p2f.input
+        pitch.isValueAdded = true
+        addPort(pitch, "Pitch")
+
         amplitude = osc.amplitude
         addPort(amplitude, "Amplitude")
-        
-        frequency = frequencyScaler.inputA
-        addPort(frequency, "Frequency")
-        
+
         pitchModulation = frequencyScaler.inputB
         addPort(pitchModulation, "PitchMod")
-        
+
         cutoff = cutoffAdder.inputB
         addPort(cutoff, "Cutoff")
-        
+
         cutoffRange = filterEnv.amplitude
         addPort(cutoffRange, "CutoffRange")
-        
+
         Q = filter.Q
         addPort(Q, "Q") // Explicit name for Q if needed
 
         ampEnv.export(this, "Amp")
         filterEnv.export(this, "Filter")
 
-        frequency.setup(osc.frequency)
+        pitch.setup(0.0, 60.0, 128.0)
         pitchModulation.setup(0.2, 1.0, 4.0)
         cutoff.setup(filter.frequency)
         cutoffRange.setup(filter.frequency)
@@ -105,9 +110,9 @@ class SubtractiveSynthVoice : Circuit(), UnitVoice {
         filterEnv.input.off(timeStamp)
     }
 
-    override fun noteOn(freq: Double, ampl: Double, timeStamp: TimeStamp) {
-        frequency.set(freq, timeStamp)
-        amplitude.set(ampl, timeStamp)
+    override fun noteOn(pitch: Double, amplitude: Double, timeStamp: TimeStamp) {
+        p2f.input.set(pitch, timeStamp)
+        this.amplitude.set(amplitude, timeStamp)
 
         ampEnv.input.on(timeStamp)
         filterEnv.input.on(timeStamp)
@@ -115,6 +120,10 @@ class SubtractiveSynthVoice : Circuit(), UnitVoice {
 
     override fun getOutputPort(): UnitOutputPort {
         return ampEnv.output
+    }
+
+    override fun getPitchPort(): UnitInputPort? {
+        return pitch
     }
 
     override fun usePreset(presetIndex: Int) {
@@ -158,10 +167,10 @@ class SubtractiveSynthVoice : Circuit(), UnitVoice {
     private object MyVoiceDescription : VoiceDescription("SubtractiveSynth", presetNames) {
         override val voiceClassName: String
             get() = "com.softsynth.ksyn.instruments.SubtractiveSynthVoice"
-            
+
         private val tags = arrayOf("electronic", "filter", "clean")
 
-        override fun createUnitVoice(): UnitVoice {
+        override fun createPitchedVoice(): PitchedVoice {
             return SubtractiveSynthVoice()
         }
 

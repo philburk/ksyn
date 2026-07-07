@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package com.softsynth.ksyn.util
+package com.softsynth.ksyn.voices
 
 import com.softsynth.ksyn.unitgen.UnitVoice
 
 /**
  * Describe a voice so that a user can pick it out of an InstrumentLibrary.
- *
- * @deprecated Use classes in com.softsynth.ksyn.voices instead
+ * 
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
 abstract class VoiceDescription(var name: String, val presetNames: Array<String>) {
@@ -37,7 +36,7 @@ abstract class VoiceDescription(var name: String, val presetNames: Array<String>
      * 
      * @return a voice
      */
-    abstract fun createUnitVoice(): UnitVoice
+    abstract fun createPitchedVoice(): PitchedVoice
 
     abstract val voiceClassName: String
 

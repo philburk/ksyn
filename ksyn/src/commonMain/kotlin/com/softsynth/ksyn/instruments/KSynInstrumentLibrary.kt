@@ -16,16 +16,15 @@
 
 package com.softsynth.ksyn.instruments
 
-import com.softsynth.ksyn.util.InstrumentLibrary
-import com.softsynth.ksyn.util.VoiceDescription
+import com.softsynth.ksyn.voices.InstrumentLibrary
+import com.softsynth.ksyn.voices.VoiceDescription
 
 /**
  * Stock instruments provided with the KSyn distribution.
- * Original JSyn version integrated with Swing `InstrumentBrowser`.
  *
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
-class KSynInstrumentLibrary : InstrumentLibrary {
+object KSynInstrumentLibrary : InstrumentLibrary {
     private val descriptions = arrayOf(
         WaveShapingVoice.getVoiceDescription(),
         SubtractiveSynthVoice.getVoiceDescription(),

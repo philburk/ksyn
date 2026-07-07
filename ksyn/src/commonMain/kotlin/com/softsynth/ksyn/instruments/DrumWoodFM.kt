@@ -26,15 +26,15 @@ import com.softsynth.ksyn.unitgen.Multiply
 import com.softsynth.ksyn.unitgen.PassThrough
 import com.softsynth.ksyn.unitgen.SineOscillator
 import com.softsynth.ksyn.unitgen.SineOscillatorPhaseModulated
-import com.softsynth.ksyn.unitgen.UnitVoice
-import com.softsynth.ksyn.util.VoiceDescription
+import com.softsynth.ksyn.voices.PitchedVoice
+import com.softsynth.ksyn.voices.VoiceDescription
 
 /**
  * Drum instruments using 2 Operator FM.
- * 
+ *
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
-class DrumWoodFM : Circuit(), UnitVoice {
+class DrumWoodFM : Circuit(), PitchedVoice {
     // Declare units and ports.
     private val ampEnv = EnvelopeAttackDecay()
     private val carrierOsc = SineOscillatorPhaseModulated()
@@ -93,14 +93,18 @@ class DrumWoodFM : Circuit(), UnitVoice {
         // Attack-decay instruments don't need noteOff typically.
     }
 
-    override fun noteOn(freq: Double, ampl: Double, timeStamp: TimeStamp) {
-        carrierOsc.amplitude.set(ampl, timeStamp)
+    override fun noteOn(pitch: Double, amplitude: Double, timeStamp: TimeStamp) {
+        carrierOsc.amplitude.set(amplitude, timeStamp)
         ampEnv.input.trigger(timeStamp)
         modEnv.input.trigger(timeStamp)
     }
 
     override fun getOutputPort(): UnitOutputPort {
         return ampEnv.output
+    }
+
+    override fun getPitchPort(): UnitInputPort? {
+        return null
     }
 
     override fun usePreset(presetIndex: Int) {
@@ -142,7 +146,7 @@ class DrumWoodFM : Circuit(), UnitVoice {
             
         private val tags = arrayOf("electronic", "drum")
 
-        override fun createUnitVoice(): UnitVoice {
+        override fun createPitchedVoice(): PitchedVoice {
             return DrumWoodFM()
         }
 

@@ -90,7 +90,7 @@ class SynthesisEngine() : Synthesizer {
     private val stoppingUnitList = mutableListOf<UnitGenerator>()
     private val stoppingUnitListMutex = Mutex()
 
-    private var loadAnalyzer: LoadAnalyzer? = null
+    private var loadAnalyzer: LoadAnalyzer? = LoadAnalyzer()
     private val audioTasks = mutableListOf<Runnable>()
 
     @Volatile
@@ -432,7 +432,9 @@ class SynthesisEngine() : Synthesizer {
     }
 
     override suspend fun renderBuffer(): AudioBuffer {
+        loadAnalyzer?.start()
         generateNextBuffer()
+        loadAnalyzer?.stop()
         return getInterleavedBuffer()
     }
 

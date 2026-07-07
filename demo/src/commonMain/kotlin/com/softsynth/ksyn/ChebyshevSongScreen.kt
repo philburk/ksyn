@@ -30,26 +30,23 @@ import com.softsynth.ksyn.compose.Oscilloscope
 import com.softsynth.ksyn.instruments.WaveShapingVoice
 import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.unitgen.LineOut
-import com.softsynth.ksyn.unitgen.PassThrough
 import com.softsynth.ksyn.unitgen.RoomReverb
 import com.softsynth.ksyn.unitgen.ScopeProbe
-import com.softsynth.ksyn.unitgen.UnitVoice
 import com.softsynth.ksyn.util.PseudoRandom
-import com.softsynth.ksyn.util.VoiceAllocator
-import com.softsynth.math.AudioMath
+import com.softsynth.ksyn.voices.PitchedVoice
+import com.softsynth.ksyn.voices.PolyphonicInstrument
 import kotlinx.coroutines.*
 
 private class ChebyshevSongPlayer : KSynPlayable() {
     var ksynAudioBridge: KSynAudioBridge
     val synth = KSyn.createSynthesizer()
-    val mixer = PassThrough()
     val reverb = RoomReverb(1.0)
     val lineOut = LineOut()
     val scope = ScopeProbe(numChannels = 2, displayBufferSize = 512)
 
     val maxVoices = 8
     val maxNotes = 5
-    val allocator: VoiceAllocator
+    lateinit var polyphonicInstrument: PolyphonicInstrument
     val pseudo = PseudoRandom()
 
     val scale = intArrayOf(0, 2, 4, 7, 9) // pentatonic scale
@@ -57,25 +54,22 @@ private class ChebyshevSongPlayer : KSynPlayable() {
     init {
         ksynAudioBridge = KSynAudioBridge(synth)
 
-        synth.add(mixer)
         synth.add(lineOut)
         synth.add(reverb)
         synth.add(scope)
 
-        mixer.output.connect(reverb.input)
-        mixer.output.connect(0, lineOut.input, 0)  // dry
-        reverb.output.connect(0, lineOut.input, 1) // wet
-        mixer.output.connect(0, scope.input, 0)    // dry → scope ch0
-        reverb.output.connect(0, scope.input, 1)   // wet → scope ch1
-
-        val voices: Array<UnitVoice> = Array(maxVoices) { WaveShapingVoice() }.map { it as UnitVoice }.toTypedArray()
+        val voices: Array<PitchedVoice> = Array(maxVoices) { WaveShapingVoice() }.map { it as PitchedVoice }.toTypedArray()
         for (i in 0 until maxVoices) {
             val voice = voices[i] as WaveShapingVoice
             synth.add(voice)
             voice.usePreset(0)
-            voice.getOutputPort().connect(mixer.input)
         }
-        allocator = VoiceAllocator(voices)
+        polyphonicInstrument = PolyphonicInstrument(synth, voices)
+        polyphonicInstrument.getOutputPort().connect(reverb.input)
+        polyphonicInstrument.getOutputPort().connect(0, lineOut.input, 0)  // dry
+        reverb.output.connect(0, lineOut.input, 1) // wet
+        polyphonicInstrument.getOutputPort().connect(0, scope.input, 0)    // dry → scope ch0
+        reverb.output.connect(0, scope.input, 1)   // wet → scope ch1
 
         lineOut.start()
         scope.start()
@@ -91,23 +85,23 @@ private class ChebyshevSongPlayer : KSynPlayable() {
         ksynAudioBridge.stop()
     }
 
-    fun indexToFrequency(index: Int): Double {
+    fun indexToPitch(index: Int): Double {
         val octave = index / scale.size
-        val temp = index % scale.size
-        val pitch = scale[temp] + (12 * octave)
-        return AudioMath.pitchToFrequency(pitch + 16.0)
+        val degree = index % scale.size
+        val pitch = scale[degree] + (12 * octave)
+        return pitch + 16.0
     }
 
     fun noteOff(time: Double, noteNumber: Int) {
-        allocator.noteOff(noteNumber, TimeStamp(time))
+        polyphonicInstrument.noteOff(noteNumber, TimeStamp(time))
     }
 
     fun noteOn(time: Double, noteNumber: Int) {
-        val frequency = indexToFrequency(noteNumber)
+        val pitch = indexToPitch(noteNumber)
+        print("CSS: noteNumber = $noteNumber, pitch = $pitch\n")
         val amplitude = 0.1
         val timeStamp = TimeStamp(time)
-        allocator.noteOn(noteNumber, frequency, amplitude, timeStamp)
-        allocator.setPort(noteNumber, "Range", 0.7, synth.createTimeStamp())
+        polyphonicInstrument.noteOn(noteNumber, pitch, amplitude, timeStamp)
     }
 
     suspend fun playSongCoroutine() {
@@ -119,7 +113,7 @@ private class ChebyshevSongPlayer : KSynPlayable() {
         var beatIndex = 0
 
         while (currentCoroutineContext().isActive) {
-            // on every measure, maybe repeat previous pattern
+            // on every measure, maybe repeat previous pattern by reusing an old random seed
             if ((beatIndex and 7) == 0) {
                 if (kotlin.random.Random.nextDouble() < 0.5) {
                     pseudo.setSeed(savedSeed)
