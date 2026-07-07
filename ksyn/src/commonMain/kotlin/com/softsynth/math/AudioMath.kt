@@ -52,8 +52,10 @@ object AudioMath {
     }
 
     /**
-     * Calculate frequency in Hertz based on MIDI pitch. Middle C is 60.0. You can use fractional
-     * pitches so 60.5 would give you a pitch half way between C and C#.
+     * Calculate frequency in Hertz based on MIDI pitch. Middle C is 60.0.
+     * A pitch value of 69 is concert A and should convert to a frequency of 440.0 Hz.
+     *
+     * You can use fractional pitches so 60.5 would give you a pitch half way between C and C#.
      */
     fun pitchToFrequency(pitch: Double): Double {
         return concertAFrequency * 2.0.pow((pitch - CONCERT_A_PITCH) * (1.0 / 12.0))
