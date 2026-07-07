@@ -70,6 +70,13 @@ open class Circuit : UnitGenerator() {
         unit.setCircuit(this)
         // Propagate circuit properties down into subunits.
         unit.isEnabled = isEnabled
+        synthesisEngine?.let { unit.synthesisEngine = it }
+    }
+
+    fun remove(unit: UnitGenerator) {
+        units.remove(unit)
+        unit.setCircuit(null)
+        unit.synthesisEngine = null
     }
 
     open fun usePreset(presetIndex: Int) {
@@ -83,6 +90,10 @@ open class Circuit : UnitGenerator() {
     fun addPortAlias(port: UnitPort, alias: String) {
         // Store in a hash table by an alternate name.
         portAliases[alias.lowercase()] = port
+    }
+
+    fun removePortAlias(alias: String) {
+        portAliases.remove(alias.lowercase())
     }
 
     /**

@@ -45,7 +45,7 @@ abstract class UnitGenerator {
     open var synthesisEngine: SynthesisEngine? = null
         get() = field
         set(value) {
-            if (field != null && field !== value) {
+            if (field != null && value != null && field !== value) {
                 throw RuntimeException("Unit synthesisEngine already set.")
             }
             field = value
@@ -81,6 +81,13 @@ abstract class UnitGenerator {
 
         // Store in map by lowercase name for case-insensitive lookup
         ports[portName.lowercase()] = port
+    }
+
+    fun removePort(port: UnitPort) {
+        val keyToRemove = ports.entries.find { it.value === port }?.key
+        if (keyToRemove != null) {
+            ports.remove(keyToRemove)
+        }
     }
 
     open fun getPortByName(portName: String): UnitPort? {
@@ -146,8 +153,8 @@ abstract class UnitGenerator {
         }
     }
 
-    open fun setCircuit(circuit: UnitGenerator) {
-        if (this.circuit != null && this.circuit !== circuit) {
+    open fun setCircuit(circuit: UnitGenerator?) {
+        if (circuit != null && this.circuit != null && this.circuit !== circuit) {
             throw RuntimeException("Unit is already in a circuit.")
         }
         this.circuit = circuit
