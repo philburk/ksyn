@@ -78,7 +78,7 @@ open class PolyphonicInstrument(val synth: Synthesizer, val voices: Array<Pitche
     /**
      * Connect a PassThrough unit to the input ports of the voices so that they can be controlled
      * together using a single port. Note that this will prevent their individual use. So the
-     * "Frequency" and "Amplitude" ports are excluded. Note that this method is a bit funky and is
+     * "Pitch" and "Amplitude" ports are excluded. Note that this method is a bit funky and is
      * likely to change.
      */
     fun exportAllInputPorts() {
