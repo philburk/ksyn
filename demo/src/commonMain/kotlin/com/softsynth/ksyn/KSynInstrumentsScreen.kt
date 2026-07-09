@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.ui.Alignment
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -234,6 +237,10 @@ class KSynInstrumentsScreen : Screen {
                 
                 // Keyboard Input
                 BlackWhiteKeyboard(
+                    modifier = Modifier
+                        .widthIn(min = 300.dp, max = 800.dp)
+                        .heightIn(min = 80.dp, max = 200.dp)
+                        .align(Alignment.CenterHorizontally),
                     onKeyDown = { noteNumber ->
                         player.polyphonicInstrument?.noteOn(
                             noteNumber,
