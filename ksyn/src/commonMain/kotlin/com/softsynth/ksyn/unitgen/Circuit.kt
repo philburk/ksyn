@@ -76,7 +76,14 @@ open class Circuit : UnitGenerator() {
     fun remove(unit: UnitGenerator) {
         units.remove(unit)
         unit.setCircuit(null)
-        unit.synthesisEngine = null
+        val engine = synthesisEngine
+        if (engine != null) {
+            engine.queueCommand {
+                unit.synthesisEngine = null
+            }
+        } else {
+            unit.synthesisEngine = null
+        }
     }
 
     open fun usePreset(presetIndex: Int) {
