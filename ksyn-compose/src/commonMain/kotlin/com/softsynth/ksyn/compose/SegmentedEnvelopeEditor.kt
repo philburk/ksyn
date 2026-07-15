@@ -78,6 +78,7 @@ fun SegmentedEnvelopeEditor(
     maxValue: Float = 1f,
     maxTime: Float = 2f,
     showToolbar: Boolean = true,
+    onChanged: (() -> Unit)? = null,
 ) {
     val density = LocalDensity.current
     val vertexRadius = with(density) { 8.dp.toPx() }
@@ -144,6 +145,7 @@ fun SegmentedEnvelopeEditor(
         envelope.sustainEnd   = sustainEnd
         envelope.releaseBegin = releaseBegin
         envelope.releaseEnd   = releaseEnd
+        onChanged?.invoke()
     }
 
     Column(modifier = modifier) {
