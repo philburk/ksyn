@@ -209,9 +209,12 @@ fun PianoKey(
             .pointerInput(index) {
                 detectTapGestures(
                     onPress = {
-                        onKeyDown(index)
-                        tryAwaitRelease()
-                        onKeyUp(index)
+                        try {
+                            onKeyDown(index)
+                            tryAwaitRelease()
+                        } finally {
+                            onKeyUp(index)
+                        }
                     }
                 )
             },
