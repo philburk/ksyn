@@ -29,6 +29,9 @@ open class UnitInputPort(
     // Stores the values set via set(), separate from the calculated/mixed audio values.
     private val setValues = AudioBuffer(numParts) { defaultValue }
 
+    /* When true the value that was set() on the port will be added to the audio values of the connected ports.
+     * When false the set() value will be ignored if there are connected audio ports.
+     */
     var isValueAdded: Boolean = false
 
     // Secondary constructors for convenience
