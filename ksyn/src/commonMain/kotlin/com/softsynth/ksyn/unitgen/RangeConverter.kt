@@ -9,12 +9,14 @@ import com.softsynth.ksyn.toSample
  * an oscillator as a modulator.
  */
 class RangeConverter : UnitFilter() {
-    val min = UnitInputPort("Min", 40.0)
-    val max = UnitInputPort("Max", 2000.0)
+    val min = UnitInputPort("Min")
+    val max = UnitInputPort("Max")
 
     init {
         addPort(min)
+        min.setup(0.0f, 40.0f, 100.0f)
         addPort(max)
+        max.setup(101.0f, 2000.0f, 4000.0f)
     }
 
     override fun generate() {
