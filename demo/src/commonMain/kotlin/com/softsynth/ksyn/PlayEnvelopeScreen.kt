@@ -25,7 +25,7 @@ import com.softsynth.ksyn.compose.SegmentedEnvelopeEditor
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import com.mobileer.audiobridge.AudioResult
+import com.softsynth.audiobridge.AudioResult
 import com.softsynth.ksyn.compose.BlackWhiteKeyboard
 import com.softsynth.ksyn.data.SegmentedEnvelope
 import com.softsynth.ksyn.unitgen.LineOut

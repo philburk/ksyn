@@ -16,7 +16,7 @@
 
 package com.softsynth.ksyn
 
-import com.mobileer.audiobridge.AudioResult
+import com.softsynth.audiobridge.AudioResult
 import com.softsynth.ksyn.unitgen.GrainFarm
 import com.softsynth.ksyn.unitgen.LineOut
 import com.softsynth.ksyn.unitgen.ScopeProbe

@@ -58,7 +58,7 @@ open class AutoStartScreen(
             DisposableEffect(Unit) {
                 // Auto-start when the screen is composed
                 val result = playable.start()
-                if (result != com.mobileer.audiobridge.AudioResult.OK) {
+                if (result != com.softsynth.audiobridge.AudioResult.OK) {
                     println("Failed to open audio bridge: $result")
                 }
 

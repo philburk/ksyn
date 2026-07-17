@@ -16,7 +16,7 @@
 
 package com.softsynth.ksyn
 
-import com.mobileer.audiobridge.writeSuspending
+import com.softsynth.audiobridge.writeSuspending
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel

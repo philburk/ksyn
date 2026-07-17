@@ -16,8 +16,8 @@
 
 package com.softsynth.ksyn
 
-import com.mobileer.audiobridge.AudioOutputBridge
-import com.mobileer.audiobridge.AudioResult
+import com.softsynth.audiobridge.AudioOutputBridge
+import com.softsynth.audiobridge.AudioResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
