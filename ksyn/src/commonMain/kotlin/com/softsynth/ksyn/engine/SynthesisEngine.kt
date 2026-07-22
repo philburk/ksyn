@@ -69,6 +69,9 @@ class SynthesisEngine() : Synthesizer {
 
     var isPullDataEnabled = true
 
+    val numInputChannels: Int
+        get() = inputBuffer?.samplesPerFrame ?: 0
+
     @Volatile
     private var started = false
     override var frameRate = DEFAULT_FRAME_RATE
@@ -313,8 +316,11 @@ class SynthesisEngine() : Synthesizer {
     }
 
     fun getInputBuffer(i: Int): AudioBuffer {
-        return inputBuffer?.getChannelBuffer(i)
-            ?: throw RuntimeException("Audio Input not configured in start() method.")
+        val buffer = inputBuffer ?: throw RuntimeException("Audio Input not configured in start() method.")
+        if (i < 0 || i >= buffer.samplesPerFrame) {
+            throw IndexOutOfBoundsException("Input channel index $i is out of bounds (0 to ${buffer.samplesPerFrame - 1})")
+        }
+        return buffer.getChannelBuffer(i)
     }
 
     fun getOutputBuffer(i: Int): AudioBuffer {
@@ -433,6 +439,17 @@ class SynthesisEngine() : Synthesizer {
 
     override suspend fun renderBuffer(): AudioBuffer {
         loadAnalyzer?.start()
+        generateNextBuffer()
+        loadAnalyzer?.stop()
+        return getInterleavedBuffer()
+    }
+
+    override suspend fun renderBuffer(inputData: AudioBuffer): AudioBuffer {
+        loadAnalyzer?.start()
+        inputBuffer?.let { internalInput ->
+            val sizeToCopy = minOf(inputData.size, internalInput.interleavedBuffer.size)
+            inputData.copyInto(internalInput.interleavedBuffer, 0, 0, sizeToCopy)
+        }
         generateNextBuffer()
         loadAnalyzer?.stop()
         return getInterleavedBuffer()

@@ -139,6 +139,7 @@ interface Synthesizer {
     suspend fun sleepFor(duration: Double)
 
     suspend fun renderBuffer(): AudioBuffer
+    suspend fun renderBuffer(inputData: AudioBuffer): AudioBuffer
 
     /** Is JSyn running in real-time mode?  */
     /**

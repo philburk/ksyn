@@ -39,11 +39,26 @@ class LineIn : UnitGenerator() {
         
         synthesisEngine?.let { engine ->
             try {
-                val buffer0 = engine.getInputBuffer(0)
-                val buffer1 = engine.getInputBuffer(1)
-                for (i in 0 until outputs0.size) {
-                    outputs0[i] = buffer0[i].toFloat()
-                    outputs1[i] = buffer1[i].toFloat()
+                val channels = engine.numInputChannels
+                val buffer0 = if (channels > 0) engine.getInputBuffer(0) else null
+                val buffer1 = if (channels > 1) engine.getInputBuffer(1) else null
+                
+                if (buffer0 != null && buffer1 != null) {
+                    for (i in 0 until outputs0.size) {
+                        outputs0[i] = buffer0[i].toFloat()
+                        outputs1[i] = buffer1[i].toFloat()
+                    }
+                } else if (buffer0 != null) {
+                    for (i in 0 until outputs0.size) {
+                        val sample = buffer0[i].toFloat()
+                        outputs0[i] = sample
+                        outputs1[i] = sample
+                    }
+                } else {
+                    for (i in 0 until outputs0.size) {
+                        outputs0[i] = 0.0f
+                        outputs1[i] = 0.0f
+                    }
                 }
             } catch (e: Exception) {
                 for (i in 0 until outputs0.size) {

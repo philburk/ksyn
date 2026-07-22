@@ -17,9 +17,10 @@ repositories {
 }
 
 kotlin {
+    jvmToolchain(17)
     androidTarget {
         compilerOptions {
-            jvmTarget.set(JvmTarget.JVM_11)
+            jvmTarget.set(JvmTarget.JVM_17)
         }
     }
     
@@ -55,7 +56,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(project(":ksyn"))
             implementation(project(":ksyn-compose"))
-            implementation("com.softsynth:audio-bridge:0.3.0")
+            implementation("com.softsynth:audio-bridge:0.4.0")
 
             // 1. The Core (Required): Basic navigation (Stack, push/pop)
             implementation("cafe.adriel.voyager:voyager-navigator:1.1.0-beta03")
@@ -100,8 +101,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
 
@@ -138,6 +139,7 @@ val copyAudioBridgeJsFiles = tasks.register<Copy>("copyAudioBridgeJsFiles") {
         // Only include the JS files we absolutely need from the JAR.
         include("kcab-webaudio.js")
         include("kcab-output-stream.js")
+        include("kcab-input-stream.js")
     }
 
     // Set the destination directory for the copied files.

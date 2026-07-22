@@ -12,6 +12,7 @@ group = "com.softsynth.ksyn.compose"
 version = "1.2.0"
 
 kotlin {
+    jvmToolchain(17)
 
     // Target declarations - add or remove as needed below. These define
     // which platforms this KMP module supports.
@@ -33,7 +34,7 @@ kotlin {
 
     jvm("desktop") {
         compilerOptions {
-            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
 
