@@ -118,6 +118,15 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.softsynth.ksyn"
             packageVersion = "1.0.0"
+
+            macOS {
+                infoPlist {
+                    extraKeysRawXml = """
+                        <key>NSMicrophoneUsageDescription</key>
+                        <string>This app requires access to the microphone for audio recording.</string>
+                    """
+                }
+            }
         }
     }
 }
