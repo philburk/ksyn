@@ -63,6 +63,9 @@ class InterpolatingDelay : UnitFilter() {
         // Allocate extra frame for guard point to speed up interpolation.
         buffer = FloatArray(numFrames + 1)
         cursor = 0
+
+        val frameRateLocal = (synthesisEngine?.frameRate ?: 44100.0).toFloat()
+        delay.maximum = numFrames.toFloat() / frameRateLocal
     }
 
     override fun generate() {
@@ -94,14 +97,15 @@ class InterpolatingDelay : UnitFilter() {
                 outputs[i] = buffer[cur]
             } else {
                 // Clip to maximum delay.
-                if (delayFrames >= numFrames.toFloat()) {
-                    delayFrames = (numFrames - 1).toFloat()
+                val nfMinus2 = (numFrames - 2).toFloat()
+                if (delayFrames > nfMinus2) {
+                    delayFrames = nfMinus2
                 }
 
                 // Calculate fractional index into delay buffer.
                 var readIndex = cur - delayFrames
                 if (readIndex < 0.0f) {
-                    readIndex += numFrames.toFloat()
+                    readIndex += nfMinus2
                 }
                 
                 // setup for interpolation.
