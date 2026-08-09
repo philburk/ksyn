@@ -6,19 +6,11 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -48,20 +40,12 @@ fun BlackWhiteKeyboard(
     numNotes: Int = 13, // Generally 12*N+1
     startingNote: Int = 48 // Middle C is 60. Must be multiple of 8
 ) {
-    var lastNoteName by remember { mutableStateOf("None") }
-    var lastNoteNumber by remember { mutableStateOf(0) }
     val noteNames = arrayOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 
     Column(
         modifier = modifier.fillMaxWidth().padding(16.dp),
         horizontalAlignment = Alignment.Companion.CenterHorizontally
     ) {
-        Text(
-            text = "Last Pressed: $lastNoteName | $lastNoteNumber",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.Companion.padding(bottom = 16.dp)
-        )
-
         BoxWithConstraints(modifier = Modifier.Companion.fillMaxWidth()) {
             val totalWhiteKeys = whiteKeysBefore(startingNote + numNotes) - whiteKeysBefore(startingNote)
             val startingWhiteKeys = whiteKeysBefore(startingNote)
@@ -107,16 +91,11 @@ fun BlackWhiteKeyboard(
                         val noteName = noteNames[keyIndex]
                         if (noteName.length == 1) {
                             PianoKey(
-                                noteName = noteName,
                                 index = noteNumber,
                                 isBlack = false,
                                 width = with(LocalDensity.current) { 0.dp }, // Layout ignores these widths since we force Constraints.fixed
                                 height = with(LocalDensity.current) { 0.dp },
-                                onKeyDown = { noteNum ->
-                                    lastNoteName = noteName
-                                    lastNoteNumber = noteNum
-                                    onKeyDown(noteNum)
-                                },
+                                onKeyDown = onKeyDown,
                                 onKeyUp = onKeyUp
                             )
                         }
@@ -128,16 +107,11 @@ fun BlackWhiteKeyboard(
                         val noteName = noteNames[keyIndex]
                         if (noteName.length > 1) {
                             PianoKey(
-                                noteName = noteName,
                                 index = noteNumber,
                                 isBlack = true,
                                 width = with(LocalDensity.current) { 0.dp }, // Layout ignores these widths since we force Constraints.fixed
                                 height = with(LocalDensity.current) { 0.dp },
-                                onKeyDown = { noteNum ->
-                                    lastNoteName = noteName
-                                    lastNoteNumber = noteNum
-                                    onKeyDown(noteNum)
-                                },
+                                onKeyDown = onKeyDown,
                                 onKeyUp = onKeyUp
                             )
                         }
@@ -193,7 +167,6 @@ fun BlackWhiteKeyboard(
 
 @Composable
 fun PianoKey(
-    noteName: String,
     index: Int,
     isBlack: Boolean,
     width: Dp,
@@ -220,11 +193,13 @@ fun PianoKey(
             },
         contentAlignment = Alignment.Companion.BottomCenter
     ) {
-        Text(
-            text = noteName,
-            fontWeight = FontWeight.Companion.Bold,
-            color = if (isBlack) Color.Companion.White else Color.Companion.Black,
-            modifier = Modifier.Companion.padding(bottom = 8.dp)
-        )
+        if (!isBlack) {
+            Text(
+                text = index.toString(),
+                fontWeight = FontWeight.Companion.Bold,
+                color = Color.Companion.Black,
+                modifier = Modifier.Companion.padding(bottom = 8.dp)
+            )
+        }
     }
 }
