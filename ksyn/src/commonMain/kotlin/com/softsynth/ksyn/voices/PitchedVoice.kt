@@ -38,6 +38,8 @@ interface PitchedVoice : UnitSource {
      */
     fun setPort(portName: String, value: AudioSample, timeStamp: TimeStamp)
 
+    fun setPitchBend(pitchBend: Double, timeStamp: TimeStamp) {}
+
     /**
      * This is used when connecting pitch modulators.
      *

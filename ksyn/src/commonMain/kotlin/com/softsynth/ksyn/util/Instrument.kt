@@ -34,5 +34,7 @@ interface Instrument {
 
     fun setPort(tag: Int, portName: String, value: Double, timeStamp: TimeStamp? = null)
 
+    fun setPitchBend(tag: Int, value: Double, timeStamp: TimeStamp? = null) {}
+
     fun allNotesOff(timeStamp: TimeStamp? = null)
 }

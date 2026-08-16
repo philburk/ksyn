@@ -171,6 +171,16 @@ open class PolyphonicInstrument(val synth: Synthesizer, val voices: Array<Pitche
         }
     }
 
+    override fun setPitchBend(tag: Int, value: Double, timeStamp: TimeStamp?) {
+        synth.queueCommand {
+            val voice = voiceAllocator.findVoice(tag)
+            if (voice != null) {
+                val ts: TimeStamp = (timeStamp ?: synth.currentTime) as TimeStamp
+                voice.setPitchBend(value, ts)
+            }
+        }
+    }
+
     override fun allNotesOff(timeStamp: TimeStamp?) {
         synth.queueCommand {
             voiceAllocator.allOff()
