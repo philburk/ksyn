@@ -31,16 +31,16 @@ open class UnitGatePort(name: String) : UnitInputPort(1, name) {
         setOn(true)
     }
 
+    fun on(timeStamp: TimeStamp) {
+        setOn(true, timeStamp)
+    }
+
     fun off() {
         setOn(false)
     }
 
     fun off(timeStamp: TimeStamp) {
         setOn(false, timeStamp)
-    }
-
-    fun on(timeStamp: TimeStamp) {
-        setOn(true, timeStamp)
     }
 
     private fun setOn(on: Boolean) {

@@ -262,7 +262,12 @@ class SynthesisEngine() : Synthesizer {
         var timeList = commandQueue.removeNextList(timeStamp)
         while (timeList != null) {
             for (command in timeList) {
-                command()
+                try {
+                    command()
+                } catch (e: Throwable) {
+                    println("Error executing scheduled command: ${e.message}")
+                    e.printStackTrace()
+                }
             }
             timeList = commandQueue.removeNextList(timeStamp)
         }

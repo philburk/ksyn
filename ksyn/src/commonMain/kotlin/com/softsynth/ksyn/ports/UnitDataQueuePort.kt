@@ -16,6 +16,7 @@
 
 package com.softsynth.ksyn.ports
 
+import com.softsynth.ksyn.data.FloatSample
 import com.softsynth.ksyn.data.SequentialData
 import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.AudioSample
@@ -25,11 +26,10 @@ import com.softsynth.ksyn.AudioSample
  *
  * @author Phil Burk (C) 2009 Mobileer Inc
  */
-class UnitDataQueuePort(name: String) : UnitPort(name) {
+class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name) {
     private val blocks = mutableListOf<QueueDataEvent>()
     private var currentBlock: QueueDataCommand? = null
     private var frameIndex = 0
-    var numChannels = 1
     var normalizedRate = 0.0
         private set
     var frameCount: Long = 0
@@ -77,26 +77,43 @@ class UnitDataQueuePort(name: String) : UnitPort(name) {
         }
     }
 
-    // FIXME - determine crossfade on any transition between blocks or when looping back.
+    private fun getUnderlyingDataAndFrame(data: SequentialData, startFrame: Int): Pair<SequentialData, Int> {
+        var d = data
+        var f = startFrame
+        while (d is SequentialDataCrossfade) {
+            val tgt = d.target ?: break
+            f += d.targetStartIndex / tgt.channelsPerFrame
+            d = tgt
+        }
+        return Pair(d, f)
+    }
 
-    protected fun setupCrossFade(sourceCommand: QueueDataCommand, sourceStartIndex: Int, targetCommand: QueueDataCommand) {
+    protected fun setupCrossFade(sourceCommand: QueueDataCommand, sourceStartFrame: Int, targetCommand: QueueDataCommand) {
         var crossFrames = targetCommand.crossFadeIn
-        val sourceData = sourceCommand.currentData
-        val targetData = targetCommand.currentData
-        val remainingSource = sourceData.numFrames - sourceStartIndex
-        
-        // clip to end of source
-        if (crossFrames > remainingSource) crossFrames = remainingSource
+        val (sourceData, realSourceStartFrame) = getUnderlyingDataAndFrame(sourceCommand.currentData, sourceStartFrame)
+        val (targetData, realTargetStartFrame) = getUnderlyingDataAndFrame(targetCommand.currentData, targetCommand.startFrame)
+
+        var effectiveSourceStartFrame = realSourceStartFrame
+        val remainingSource = (sourceData.numFrames - effectiveSourceStartFrame.coerceAtLeast(0)).coerceAtLeast(0)
+
+        // If remainingSource is less than crossFrames (e.g. loop reached the end of the sample),
+        // adjust effectiveSourceStartFrame backwards so we can crossfade from the tail of the sample.
+        if (remainingSource < crossFrames && sourceData.numFrames >= crossFrames) {
+            effectiveSourceStartFrame = (sourceData.numFrames - crossFrames).coerceAtLeast(0)
+        } else if (crossFrames > remainingSource) {
+            crossFrames = remainingSource
+        }
+
         if (crossFrames > 0) {
             // The SequentialDataCrossfade should continue to the end of the target
             // so that we can crossfade from it to the target.
-            val remainingTarget = targetData.numFrames - targetCommand.startFrame
+            val remainingTarget = (targetData.numFrames - realTargetStartFrame.coerceAtLeast(0)).coerceAtLeast(0)
             targetCommand.crossfadeData.setup(
-                sourceData, 
-                sourceStartIndex, 
-                crossFrames, 
-                targetData, 
-                targetCommand.startFrame, 
+                sourceData,
+                effectiveSourceStartFrame,
+                crossFrames,
+                targetData,
+                realTargetStartFrame,
                 remainingTarget)
             targetCommand.currentData = targetCommand.crossfadeData
             targetCommand.startFrame = 0
@@ -108,10 +125,15 @@ class UnitDataQueuePort(name: String) : UnitPort(name) {
     }
 
     fun createQueueDataCommand(queueableData: SequentialData, startFrame: Int, numFrames: Int): QueueDataCommand {
-        if (queueableData.channelsPerFrame != this.numChannels) {
-            throw RuntimeException("Tried to queue " + queueableData.channelsPerFrame + " channel data to a " + numChannels + " channel port.")
+        val data = if (queueableData.channelsPerFrame != this.numChannels && this.numChannels == 1 && queueableData is FloatSample) {
+            queueableData.toMono()
+        } else {
+            queueableData
         }
-        return QueuedBlock(queueableData, startFrame, numFrames)
+        if (data.channelsPerFrame != this.numChannels) {
+            throw RuntimeException("Tried to queue " + data.channelsPerFrame + " channel data to a " + numChannels + " channel port.")
+        }
+        return QueuedBlock(data, startFrame, numFrames)
     }
 
     fun getEndBlock(): QueueDataCommand? {
@@ -211,7 +233,7 @@ class UnitDataQueuePort(name: String) : UnitPort(name) {
 
     fun readNextMonoDouble(synthesisPeriod: Double): AudioSample {
         beginFrame(synthesisPeriod)
-        val value = currentBlock?.currentData?.readSample(frameIndex) ?: 0.0f
+        val value = currentBlock?.currentData?.readSample(frameIndex * numChannels) ?: 0.0f
         endFrame()
         return value
     }
@@ -233,23 +255,74 @@ class UnitDataQueuePort(name: String) : UnitPort(name) {
     /**
      * Queue the data to the port at a future time. Command will clear the queue before executing.
      */
-    fun queueImmediate(queueableData: SequentialData, startFrame: Int, numFrames: Int, timeStamp: TimeStamp) {
+    fun queueImmediate(queueableData: SequentialData, startFrame: Int, numFrames: Int, timeStamp: TimeStamp, crossFadeIn: Int = 0) {
         val command = createQueueDataCommand(queueableData, startFrame, numFrames)
         command.isImmediate = true
+        command.crossFadeIn = crossFadeIn
         scheduleCommand(timeStamp.time) { command.run() }
     }
 
     /** Queue the data to the port at a future time. */
-    fun queueLoop(queueableData: SequentialData, startFrame: Int, numFrames: Int, timeStamp: TimeStamp) {
-        queueLoop(queueableData, startFrame, numFrames, LOOP_IF_LAST, timeStamp)
+    fun queue(
+        queueableData: SequentialData,
+        startFrame: Int,
+        numFrames: Int,
+        timeStamp: TimeStamp,
+        crossFadeIn: Int = 0,
+        skipIfOthers: Boolean = false
+    ) {
+        val command = createQueueDataCommand(queueableData, startFrame, numFrames)
+        command.crossFadeIn = crossFadeIn
+        command.isSkipIfOthers = skipIfOthers
+        scheduleCommand(timeStamp.time) { command.run() }
+    }
+
+    /** Queue the data to the port at a future time. */
+    fun queueLoop(
+        queueableData: SequentialData,
+        startFrame: Int,
+        numFrames: Int,
+        timeStamp: TimeStamp,
+        crossFadeIn: Int = 0,
+        skipIfOthers: Boolean = false
+    ) {
+        queueLoop(queueableData, startFrame, numFrames, LOOP_IF_LAST, timeStamp, crossFadeIn, skipIfOthers)
     }
 
     /**
      * Queue the data to the port at a future time with a specified number of loops.
      */
-    fun queueLoop(queueableData: SequentialData, startFrame: Int, numFrames: Int, numLoops: Int, timeStamp: TimeStamp) {
+    fun queueLoop(
+        queueableData: SequentialData,
+        startFrame: Int,
+        numFrames: Int,
+        numLoops: Int,
+        timeStamp: TimeStamp,
+        crossFadeIn: Int = 0,
+        skipIfOthers: Boolean = false
+    ) {
         val command = createQueueDataCommand(queueableData, startFrame, numFrames)
         command.numLoops = numLoops
+        command.crossFadeIn = crossFadeIn
+        command.isSkipIfOthers = skipIfOthers
+        scheduleCommand(timeStamp.time) { command.run() }
+    }
+
+    /**
+     * Queue the data to the port for looping at a future time. Command will clear the queue before executing.
+     */
+    fun queueLoopImmediate(queueableData: SequentialData, startFrame: Int, numFrames: Int, timeStamp: TimeStamp, crossFadeIn: Int = 0) {
+        queueLoopImmediate(queueableData, startFrame, numFrames, LOOP_IF_LAST, timeStamp, crossFadeIn)
+    }
+
+    /**
+     * Queue the data to the port for looping at a future time with a specified number of loops. Command will clear the queue before executing.
+     */
+    fun queueLoopImmediate(queueableData: SequentialData, startFrame: Int, numFrames: Int, numLoops: Int, timeStamp: TimeStamp, crossFadeIn: Int = 0) {
+        val command = createQueueDataCommand(queueableData, startFrame, numFrames)
+        command.isImmediate = true
+        command.numLoops = numLoops
+        command.crossFadeIn = crossFadeIn
         scheduleCommand(timeStamp.time) { command.run() }
     }
 
@@ -268,6 +341,21 @@ class UnitDataQueuePort(name: String) : UnitPort(name) {
      */
     fun queueLoop(queueableData: SequentialData, startFrame: Int, numFrames: Int, numLoops: Int) {
         val command = createQueueDataCommand(queueableData, startFrame, numFrames)
+        command.numLoops = numLoops
+        queueCommand { command.run() }
+    }
+
+    /** Queue the data to the port for immediate looping. */
+    fun queueLoopImmediate(queueableData: SequentialData, startFrame: Int, numFrames: Int) {
+        queueLoopImmediate(queueableData, startFrame, numFrames, LOOP_IF_LAST)
+    }
+
+    /**
+     * Queue the data to the port for immediate looping with a specified number of loops.
+     */
+    fun queueLoopImmediate(queueableData: SequentialData, startFrame: Int, numFrames: Int, numLoops: Int) {
+        val command = createQueueDataCommand(queueableData, startFrame, numFrames)
+        command.isImmediate = true
         command.numLoops = numLoops
         queueCommand { command.run() }
     }

@@ -72,19 +72,21 @@ class SequentialDataCrossfade : SequentialDataCommon() {
         
         // There is a danger that we might nest SequentialDataCrossfades deeply
         // as source. If past crossfade region then pull out the target.
-        if (src is SequentialDataCrossfade) {
+        while (src is SequentialDataCrossfade) {
             val crossfade = src
             // If we are starting past the crossfade region then just use the
             // target.
             if (srcStartFrame >= crossfade.crossFadeFrames) {
-                src = crossfade.target!!
+                src = crossfade.target ?: break
                 srcStartFrame += crossfade.targetStartIndex / src.channelsPerFrame
+            } else {
+                break
             }
         }
 
-        if (tgt is SequentialDataCrossfade) {
+        while (tgt is SequentialDataCrossfade) {
             val crossfade = tgt
-            tgt = crossfade.target!!
+            tgt = crossfade.target ?: break
             tgtStartFrame += crossfade.targetStartIndex / tgt.channelsPerFrame
         }
 
@@ -120,8 +122,8 @@ class SequentialDataCrossfade : SequentialDataCommon() {
         return readSample(index).toDouble()
     }
 
-    override fun getRateScaler(index: Int, synthesisRate: Double): Double {
-        return target?.getRateScaler(index, synthesisRate) ?: 1.0
+    override fun getRateScaler(index: Int, synthesisPeriod: Double): Double {
+        return target?.getRateScaler(index, synthesisPeriod) ?: 1.0
     }
 
     override val channelsPerFrame: Int

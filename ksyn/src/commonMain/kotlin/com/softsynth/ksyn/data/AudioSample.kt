@@ -32,7 +32,7 @@ abstract class AudioSampleData : SequentialDataCommon() {
 
     abstract fun allocate(numFrames: Int, channelsPerFrame: Int)
 
-    override fun getRateScaler(index: Int, synthesisRate: Double): Double {
+    override fun getRateScaler(index: Int, synthesisPeriod: Double): Double {
         return 1.0
     }
 

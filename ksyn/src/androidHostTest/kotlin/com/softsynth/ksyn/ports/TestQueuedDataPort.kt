@@ -496,4 +496,131 @@ class TestQueuedDataPort {
 
         checkQueuedData(data2, dataQueue, 4, 5)
     }
+
+    @Test
+    fun testStereoCrossFade() {
+        val stereoData1 = FloatArray(12) { i ->
+            val frame = i / 2
+            val ch = i % 2
+            (frame * 10 + ch).toFloat()
+        }
+        val stereoData2 = FloatArray(12) { i ->
+            val frame = i / 2
+            val ch = i % 2
+            (100 + frame * 10 + ch).toFloat()
+        }
+        val sample1 = FloatSample(stereoData1, 2)
+        val sample2 = FloatSample(stereoData2, 2)
+
+        val dataQueue = UnitDataQueuePort("test", numChannels = 2)
+        val cmd1 = dataQueue.createQueueDataCommand(sample1, 0, 4)
+        cmd1.run()
+
+        // Read frames 0 and 1
+        dataQueue.beginFrame(synth.framePeriod)
+        dataQueue.readCurrentChannelDouble(0)
+        dataQueue.readCurrentChannelDouble(1)
+        dataQueue.endFrame()
+
+        dataQueue.beginFrame(synth.framePeriod)
+        dataQueue.readCurrentChannelDouble(0)
+        dataQueue.readCurrentChannelDouble(1)
+        dataQueue.endFrame()
+
+        // Interrupt at frame 2 with crossfade of 2 frames to sample2 starting at frame 1
+        val cmd2 = dataQueue.createQueueDataCommand(sample2, 1, 4)
+        cmd2.isImmediate = true
+        cmd2.crossFadeIn = 2
+        cmd2.run()
+
+        // Frame 0 of cmd2: crossfade between sample1 frame 2 and sample2 frame 1 (factor = 0/2 = 0.0)
+        dataQueue.beginFrame(synth.framePeriod)
+        val ch0_0 = dataQueue.readCurrentChannelDouble(0)
+        val ch1_0 = dataQueue.readCurrentChannelDouble(1)
+        dataQueue.endFrame()
+        assertEquals(20.0f, ch0_0, 0.0001f, "stereo xfade frame 0 ch0")
+        assertEquals(21.0f, ch1_0, 0.0001f, "stereo xfade frame 0 ch1")
+
+        // Frame 1 of cmd2: crossfade between sample1 frame 3 and sample2 frame 2 (factor = 1/2 = 0.5)
+        dataQueue.beginFrame(synth.framePeriod)
+        val ch0_1 = dataQueue.readCurrentChannelDouble(0)
+        val ch1_1 = dataQueue.readCurrentChannelDouble(1)
+        dataQueue.endFrame()
+        assertEquals(75.0f, ch0_1, 0.0001f, "stereo xfade frame 1 ch0")
+        assertEquals(76.0f, ch1_1, 0.0001f, "stereo xfade frame 1 ch1")
+
+        // Frame 2 of cmd2: full volume sample2 frame 3 (130, 131)
+        dataQueue.beginFrame(synth.framePeriod)
+        val ch0_2 = dataQueue.readCurrentChannelDouble(0)
+        val ch1_2 = dataQueue.readCurrentChannelDouble(1)
+        dataQueue.endFrame()
+        assertEquals(130.0f, ch0_2, 0.0001f, "stereo xfade frame 2 ch0")
+        assertEquals(131.0f, ch1_2, 0.0001f, "stereo xfade frame 2 ch1")
+    }
+
+    @Test
+    fun testMultipleLoopCrossFades() {
+        val data = FloatArray(10) { it.toFloat() }
+        val sample = FloatSample(data)
+        val dataQueue = UnitDataQueuePort("test")
+
+        // Loop frames 1..4 (numFrames = 3) with 2 frames crossfade
+        val cmd = dataQueue.createQueueDataCommand(sample, 1, 3)
+        cmd.numLoops = UnitDataQueuePort.LOOP_IF_LAST
+        cmd.crossFadeIn = 2
+        cmd.run()
+
+        // Loop pass 1: frames 1, 2, 3
+        assertEquals(1.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+        assertEquals(2.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+        assertEquals(3.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+
+        // Loop pass 2 wrap: should crossfade from frame 4 -> frame 1 (factor 0.0 -> value = 4.0)
+        assertEquals(4.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+        // factor 0.5 -> 0.5 * frame 5 (5.0) + 0.5 * frame 2 (2.0) = 3.5
+        assertEquals(3.5f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+        // frame 3
+        assertEquals(3.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+
+        // Loop pass 3 wrap: should crossfade again! factor 0.0 -> frame 4 (4.0)
+        assertEquals(4.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+        // factor 0.5 -> 0.5 * 5.0 + 0.5 * 2.0 = 3.5
+        assertEquals(3.5f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+        assertEquals(3.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+    }
+
+    @Test
+    fun testDynamicLoopReplacementWithCrossFade() {
+        val data = FloatArray(20) { (it * 10).toFloat() }
+        val sample = FloatSample(data)
+        val dataQueue = UnitDataQueuePort("test")
+
+        // Start looping frames 0..3 (numFrames = 3) with crossfade 2
+        val cmd1 = dataQueue.createQueueDataCommand(sample, 0, 3)
+        cmd1.numLoops = UnitDataQueuePort.LOOP_IF_LAST
+        cmd1.crossFadeIn = 2
+        cmd1.run()
+
+        // Read frames 0 and 1
+        assertEquals(0.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+        assertEquals(10.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+
+        // While cmd1 is playing, queue replacement loop cmd2 at frame 10 (numFrames = 3, crossfade = 2, skipIfOthers = true)
+        val cmd2 = dataQueue.createQueueDataCommand(sample, 10, 3)
+        cmd2.numLoops = UnitDataQueuePort.LOOP_IF_LAST
+        cmd2.crossFadeIn = 2
+        cmd2.isSkipIfOthers = true
+        cmd2.run()
+
+        // cmd1 finishes its 3rd frame (frame 2)
+        assertEquals(20.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+
+        // Now cmd2 starts! It should crossfade from cmd1's tail (frame 3 = 30) into cmd2's start (frame 10 = 100)
+        // factor 0.0 -> frame 3 (30.0)
+        assertEquals(30.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+        // factor 0.5 -> 0.5 * frame 4 (40.0) + 0.5 * frame 11 (110.0) = 75.0
+        assertEquals(75.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+        // frame 2 of cmd2 (frame 12 = 120.0)
+        assertEquals(120.0f, dataQueue.readNextMonoDouble(synth.framePeriod), 0.0001f)
+    }
 }

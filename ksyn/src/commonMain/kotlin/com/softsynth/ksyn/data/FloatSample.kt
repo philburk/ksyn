@@ -126,4 +126,28 @@ open class FloatSample() : AudioSampleData(), Function {
         val fractionalIndex = (numFrames - 1.01) * normalizedInput
         return interpolate(fractionalIndex.toFloat()).toDouble()
     }
+
+    /**
+     * If this sample is multi-channel, returns a new mono FloatSample with channels mixed down (averaged).
+     * If already mono, returns this sample.
+     */
+    fun toMono(): FloatSample {
+        if (channelsPerFrame == 1) return this
+        val mono = FloatSample(numFrames).apply {
+            frameRate = this@FloatSample.frameRate
+            sustainBegin = this@FloatSample.sustainBegin
+            sustainEnd = this@FloatSample.sustainEnd
+            releaseBegin = this@FloatSample.releaseBegin
+            releaseEnd = this@FloatSample.releaseEnd
+        }
+        val ch = channelsPerFrame
+        for (i in 0 until numFrames) {
+            var sum = 0.0f
+            for (c in 0 until ch) {
+                sum += readSample(i * ch + c)
+            }
+            mono.writeSample(i, sum / ch)
+        }
+        return mono
+    }
 }

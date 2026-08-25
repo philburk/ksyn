@@ -1,0 +1,5 @@
+DESIGN PROBLEM: The EnvelopeAttackDecay should really be called EnvelopeAttackRelease because it waits for the off phase.
+An AttackDecay envelope should just have a trigger input, not on/off!
+Maybe we are OK because we have on/off and trigger methods on the UnitGatePort.
+So we can have both behaviors.
+
