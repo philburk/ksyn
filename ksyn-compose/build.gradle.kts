@@ -9,7 +9,8 @@ plugins {
 
 group = "com.softsynth.ksyn.compose"
 // The version numbers here should match the version in KSyn.kts
-version = "1.2.0"
+// and in ksyn/build.gradle.kts.
+version = "1.3.0"
 
 kotlin {
     jvmToolchain(17)

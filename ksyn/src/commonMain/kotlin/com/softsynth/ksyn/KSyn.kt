@@ -59,12 +59,13 @@ inline fun Number.toSample(): AudioSample = this.toFloat()
 object KSyn {
     // Update these for every release.
     // The version numbers were reset when porting form JSyn to KSyn.
-    // The version numbers here should match the version in build.gradle.kts
+    // The version numbers here should match the version in ksyn/build.gradle.kts
+    // and ksyn-compose/build.gradle.kts.
     private const val VERSION_MAJOR = 1
-    private const val VERSION_MINOR = 2
+    private const val VERSION_MINOR = 3
     private const val VERSION_REVISION = 0
-    const val BUILD_NUMBER: Int = 469
-    private val BUILD_DATE = "2026-07-05"
+    const val BUILD_NUMBER: Int = 470
+    private val BUILD_DATE = "2026-08-25"
 
     // These are built from the updated values.
     val VERSION: String = (VERSION_MAJOR.toString() + "." + VERSION_MINOR + "."
