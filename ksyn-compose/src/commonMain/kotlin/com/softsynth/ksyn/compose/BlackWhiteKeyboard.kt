@@ -80,7 +80,6 @@ fun BlackWhiteKeyboard(
             }
 
             val numWhiteKeys = totalWhiteKeys
-            val numBlackKeys = blackKeyNoteNumbers.size
 
             Layout(
                 content = {
