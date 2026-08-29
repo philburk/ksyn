@@ -6,12 +6,12 @@ import com.softsynth.ksyn.ports.UnitOutputPort
 import com.softsynth.ksyn.toSample
 
 /**
- * SchmidtTrigger unit.
+ * SchmittTrigger unit.
  *
  * Output logic level value with hysteresis. Transition high when input exceeds setLevel. Only go
  * low when input is below resetLevel.
  */
-class SchmidtTrigger : UnitFilter() {
+class SchmittTrigger : UnitFilter() {
     val setLevel = UnitInputPort("SetLevel")
     val resetLevel = UnitInputPort("ResetLevel")
     val outputPulse = UnitOutputPort("OutputPulse")
@@ -50,3 +50,9 @@ class SchmidtTrigger : UnitFilter() {
         }
     }
 }
+
+@Deprecated(
+    message = "Spelling corrected to SchmittTrigger",
+    replaceWith = ReplaceWith("SchmittTrigger")
+)
+typealias SchmidtTrigger = SchmittTrigger
