@@ -30,7 +30,8 @@ object KSynInstrumentLibrary : InstrumentLibrary {
         SubtractiveSynthVoice.getVoiceDescription(),
         DualOscillatorSynthVoice.getVoiceDescription(),
         NoiseHit.getVoiceDescription(),
-        DrumWoodFM.getVoiceDescription()
+        DrumWoodFM.getVoiceDescription(),
+        MinimalSawVoice.getVoiceDescription(),
     )
 
     override val voiceDescriptions: Array<VoiceDescription>
