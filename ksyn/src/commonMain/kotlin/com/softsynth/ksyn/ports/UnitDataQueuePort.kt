@@ -29,7 +29,8 @@ import com.softsynth.ksyn.AudioSample
 class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name) {
     private val blocks = mutableListOf<QueueDataEvent>()
     private var currentBlock: QueueDataCommand? = null
-    private var frameIndex = 0
+    var frameIndex = 0
+        private set
     var normalizedRate = 0.0
         private set
     var frameCount: Long = 0
@@ -244,6 +245,7 @@ class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name)
         setCurrentBlock(null)
         isTargetValid = false
         autoStopPending = false
+        frameIndex = 0
     }
 
     /** Queue the data to the port at a future time. */
