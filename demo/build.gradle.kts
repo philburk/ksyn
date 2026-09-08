@@ -7,7 +7,8 @@ plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
-    alias(libs.plugins.composeHotReload)
+    // Disabled to avoid "JVM Main Run Task Conflict" with desktopRun in Android Studio/IntelliJ
+    // alias(libs.plugins.composeHotReload)
 }
 
 repositories {

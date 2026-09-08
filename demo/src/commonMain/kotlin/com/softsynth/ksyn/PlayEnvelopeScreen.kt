@@ -129,7 +129,7 @@ class PlayEnvelopeScreen : Screen {
 
                 SegmentedEnvelopeEditor(
                     envelope = player.ampEnvelope,
-                    modifier = Modifier.fillMaxWidth().height(220.dp),
+                    modifier = Modifier.fillMaxWidth().height(210.dp),
                     minValue = 0f,
                     maxValue = 1f,
                     maxTime = 2f,

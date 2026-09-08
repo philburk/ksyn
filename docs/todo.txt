@@ -1,5 +1,20 @@
-DESIGN PROBLEM: The EnvelopeAttackDecay should really be called EnvelopeAttackRelease because it waits for the off phase.
-An AttackDecay envelope should just have a trigger input, not on/off!
-Maybe we are OK because we have on/off and trigger methods on the UnitGatePort.
-So we can have both behaviors.
+
+The EnvelopeEditor "sustain loop" checkbox label has very low contrast and is hard to read.
+See attached screenshot.
+
+EnvelopeEditor needs axis labels, time on the horizontal axis and value on the vertical axis.
+
+We need a way to expand the X and Y range so that we could have very long envelopes
+spanning 100's of seconds, or envelopes that have values in the 1000's.
+Maybe use little zoom faders like the sample editor has in Logic Pro.
+
+BUG: When a point is at y=0, the bottom part of the point cannot be grabbed and dragged.
+We have to grab the top part of the point's circle.
+Can we make the entire point circle active?
+
+When we are dragging a point, show a popup that contains the point's x and y values.
+
+When the EnvelopeEditor is first displayed, show a message in the top right corner that says
+"SHIFT+CLICK to delete points." After adding, deleting or dragging a point, remove the message.
+
 
