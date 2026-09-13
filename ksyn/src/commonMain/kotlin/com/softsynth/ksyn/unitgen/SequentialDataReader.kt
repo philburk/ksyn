@@ -37,4 +37,17 @@ abstract class SequentialDataReader : UnitGenerator() {
         amplitude = UnitInputPort("Amplitude", UnitOscillator.DEFAULT_AMPLITUDE)
         addPort(amplitude)
     }
+
+    /**
+     * Specify a unit to be disabled when the envelope or sample finishes.
+     *
+     * @param unit the UnitGenerator (such as a Circuit or Voice) to disable. Defaults to this reader.
+     */
+    fun setupAutoDisable(unit: UnitGenerator = this) {
+        dataQueue.setupAutoDisable(unit)
+    }
+
+    fun setAutoDisableEnabled(enabled: Boolean) {
+        dataQueue.setAutoDisableEnabled(enabled)
+    }
 }

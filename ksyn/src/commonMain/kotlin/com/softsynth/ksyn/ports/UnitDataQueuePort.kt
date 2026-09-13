@@ -20,6 +20,7 @@ import com.softsynth.ksyn.data.FloatSample
 import com.softsynth.ksyn.data.SequentialData
 import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.AudioSample
+import com.softsynth.ksyn.unitgen.UnitGenerator
 
 /**
  * Queue for SequentialData, samples or envelopes
@@ -40,6 +41,10 @@ class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name)
         private set
     private var finishingBlock: QueueDataCommand? = null
     private var loopingBlock: QueueDataCommand? = null
+
+    private var autoDisableTarget: UnitGenerator? = null
+    var isAutoDisableEnabled: Boolean = false
+        private set
 
     companion object {
         const val LOOP_IF_LAST = -1
@@ -75,6 +80,10 @@ class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name)
             }
 
             blocks.add(this)
+
+            if (isAutoDisableEnabled) {
+                getTargetUnit()?.isEnabled = true
+            }
         }
     }
 
@@ -159,6 +168,9 @@ class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name)
         if (finishingBlock != null) {
             finishingBlock?.callback?.finished(currentBlock ?: finishingBlock!!) // FIXME - Should this pass finishingBlock?!
             finishingBlock = null
+            if (isAutoDisableEnabled && !hasMore()) {
+                checkAutoDisable()
+            }
         }
     }
 
@@ -470,12 +482,68 @@ class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name)
         }
     }
 
+    private fun getTargetUnit(): UnitGenerator? {
+        return autoDisableTarget ?: unitGenerator
+    }
+
+    /**
+     * Specify a unit to be disabled when the data queue finishes.
+     * The target unit is initially disabled until data is queued.
+     *
+     * @param unit the UnitGenerator (such as a Circuit or Voice) to disable when queue finishes.
+     */
+    fun setupAutoDisable(unit: UnitGenerator) {
+        autoDisableTarget = unit
+        setAutoDisableEnabled(true)
+        // Start off disabled if queue is empty so we don't immediately swamp the CPU.
+        if (!hasMore()) {
+            getTargetUnit()?.isEnabled = false
+        }
+    }
+
+    /**
+     * Setup auto-disable targeting the UnitGenerator containing this port.
+     */
+    fun setupAutoDisable() {
+        val target = unitGenerator ?: throw IllegalStateException("Port not added to a UnitGenerator")
+        setupAutoDisable(target)
+    }
+
+    /**
+     * Request the target UnitGenerator be disabled when data finishes.
+     */
+    fun setAutoDisableEnabled(enabled: Boolean) {
+        isAutoDisableEnabled = enabled
+        if (!enabled) {
+            autoDisableTarget = null
+        }
+    }
+
+    /**
+     * Called when the data queue reaches the end of data or is cleared.
+     */
+    fun checkAutoDisable() {
+        if (isAutoDisableEnabled && !hasMore()) {
+            getTargetUnit()?.isEnabled = false
+        }
+    }
+
     fun clear(timeStamp: TimeStamp) {
-        scheduleCommand(timeStamp.time) { clearQueue() }
+        scheduleCommand(timeStamp.time) {
+            clearQueue()
+            if (isAutoDisableEnabled) {
+                checkAutoDisable()
+            }
+        }
     }
 
     fun clear() {
-        queueCommand { clearQueue() }
+        queueCommand {
+            clearQueue()
+            if (isAutoDisableEnabled) {
+                checkAutoDisable()
+            }
+        }
     }
 
     fun writeNextSample(value: AudioSample) {
