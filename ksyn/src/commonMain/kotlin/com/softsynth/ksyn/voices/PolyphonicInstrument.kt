@@ -23,11 +23,10 @@ import com.softsynth.ksyn.unitgen.Circuit
 import com.softsynth.ksyn.unitgen.Multiply
 import com.softsynth.ksyn.unitgen.PassThrough
 import com.softsynth.ksyn.unitgen.UnitSource
-import com.softsynth.ksyn.unitgen.UnitVoice
 import com.softsynth.ksyn.shared.time.TimeStamp
 import com.softsynth.ksyn.toSample
+import com.softsynth.ksyn.unitgen.TwoInDualOut
 import com.softsynth.ksyn.util.Instrument
-import com.softsynth.ksyn.util.VoiceAllocator
 
 /**
  * The API for this class is likely to change. Please comment on its usefulness.
@@ -35,24 +34,46 @@ import com.softsynth.ksyn.util.VoiceAllocator
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
 open class PolyphonicInstrument(val synth: Synthesizer, val voices: Array<PitchedVoice>) : Circuit(), UnitSource, Instrument {
-    private val mixer: Multiply
+    private val multiplier0: Multiply
+    private val multiplier1: Multiply
     private val pitchPassthrough: PassThrough
+    private val ampPassthrough: PassThrough
+    private val dualOutput: TwoInDualOut
     private val voiceAllocator: OnOffAllocator<PitchedVoice>
     val amplitude: UnitInputPort
     val pitchOffset: UnitInputPort
+    val isMono: Boolean
 
     init {
         voiceAllocator = OnOffAllocator<PitchedVoice>(voices)
-        mixer = Multiply()
+        multiplier0 = Multiply()
+        multiplier1 = Multiply()
+        dualOutput = TwoInDualOut()
         pitchPassthrough = PassThrough()
+        ampPassthrough = PassThrough()
+
+        isMono = (voices[0].getOutputPort().numParts == 1)
         add(pitchPassthrough)
-        add(mixer)
+        add(multiplier0)
+        if (!isMono) {
+            add(multiplier1)
+            add(ampPassthrough)
+        }
 
         pitchOffset = pitchPassthrough.input
         addPort(pitchOffset, "PitchOffset")
         pitchOffset.setup(-2.0, 0.0, 2.0)
 
-        amplitude = mixer.inputB
+        if (isMono) {
+            amplitude = multiplier0.inputB
+        } else {
+            amplitude = ampPassthrough.input
+            add(dualOutput)
+            ampPassthrough.output.connect(multiplier0.inputB)
+            ampPassthrough.output.connect(multiplier1.inputB)
+            multiplier0.output.connect(dualOutput.inputA)
+            multiplier1.output.connect(dualOutput.inputB)
+        }
         addPort(amplitude, "Amplitude")
         amplitude.setup(0.0001, 0.4, 2.0)
         
@@ -62,7 +83,10 @@ open class PolyphonicInstrument(val synth: Synthesizer, val voices: Array<Pitche
             val wasEnabled = unit.isEnabled
             // This overrides the enabled property of the voice.
             add(unit)
-            voice.getOutputPort().connect(mixer.inputA)
+            voice.getOutputPort().connect(0, multiplier0.inputA, 0)
+            if (!isMono) {
+                voice.getOutputPort().connect(1, multiplier1.inputA, 0)
+            }
             val pitchPort = voice.getPitchPort()
             if (pitchPort != null) {
                 pitchPassthrough.output.connect(pitchPort)
@@ -117,7 +141,7 @@ open class PolyphonicInstrument(val synth: Synthesizer, val voices: Array<Pitche
     }
 
     override fun getOutputPort(): UnitOutputPort {
-        return mixer.output
+        return if (isMono) multiplier0.output else dualOutput.output
     }
 
     override fun usePreset(presetIndex: Int) {

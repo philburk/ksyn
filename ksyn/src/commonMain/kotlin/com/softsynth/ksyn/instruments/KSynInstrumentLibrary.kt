@@ -32,6 +32,7 @@ object KSynInstrumentLibrary : InstrumentLibrary {
         NoiseHit.getVoiceDescription(),
         DrumWoodFM.getVoiceDescription(),
         MinimalSawVoice.getVoiceDescription(),
+        PanningSaw.getVoiceDescription(),
     )
 
     override val voiceDescriptions: Array<VoiceDescription>
