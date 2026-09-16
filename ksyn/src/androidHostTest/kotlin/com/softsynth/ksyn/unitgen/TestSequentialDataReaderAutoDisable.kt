@@ -143,4 +143,121 @@ class TestSequentialDataReaderAutoDisable : NonRealTimeTestCase() {
         checkSleepUntil(synthesisEngine.currentTime + 0.15)
         assertFalse(reader.isEnabled, "Reader should become disabled when envelope completes")
     }
+
+    @Test
+    fun testVariableRateMonoReaderAutoDisableWithSustainPoint() {
+        val ramp = LinearRamp()
+        val reader = VariableRateMonoReader()
+        val adder = Add()
+
+        synthesisEngine.add(ramp)
+        synthesisEngine.add(reader)
+        synthesisEngine.add(adder)
+
+        reader.output.connect(adder.inputA)
+        ramp.output.connect(adder.inputB)
+
+        // Envelope: attack (0.05s -> 1.0), decay to sustain point (0.05s -> 0.5), release (0.05s -> 0.0)
+        // sustain point on frame 1: sustainBegin == sustainEnd
+        val envelope = SegmentedEnvelope(
+            doubleArrayOf(
+                0.05, 1.0, // frame 0: attack
+                0.05, 0.5, // frame 1: decay to sustain point
+                0.05, 0.0  // frame 2: release
+            )
+        ).apply {
+            sustainBegin = 1
+            sustainEnd = 1
+        }
+
+        reader.rate.set(1.0)
+        reader.setupAutoDisable(ramp)
+        assertFalse(ramp.isEnabled, "Ramp should start disabled")
+
+        synthesisEngine.start()
+        adder.start()
+
+        // Advance a bit while idle
+        checkSleepUntil(synthesisEngine.currentTime + 0.05)
+        assertFalse(ramp.isEnabled, "Ramp should remain disabled while queue is idle")
+
+        // Note On: queueOn attack portion up to sustain point
+        reader.dataQueue.queueOn(envelope)
+        checkSleepUntil(synthesisEngine.currentTime + 0.02)
+        assertTrue(ramp.isEnabled, "Ramp should be enabled on queueOn")
+
+        // Advance through attack and decay into the sustain point.
+        // The queue runs dry (starves) here, but because it is a sustain point and not an end block,
+        // it must remain enabled!
+        checkSleepUntil(synthesisEngine.currentTime + 0.15)
+        assertTrue(ramp.isEnabled, "Ramp should remain enabled while holding at sustain point")
+
+        // Note Off: queueOff release portion
+        reader.dataQueue.queueOff(envelope)
+        checkSleepUntil(synthesisEngine.currentTime + 0.02)
+        assertTrue(ramp.isEnabled, "Ramp should remain enabled during release phase")
+
+        // Advance past release completion (0.05s release)
+        checkSleepUntil(synthesisEngine.currentTime + 0.15)
+        assertFalse(ramp.isEnabled, "Ramp should be disabled after envelope release completes")
+
+        // Retrigger: Note On again
+        reader.dataQueue.queueOn(envelope)
+        checkSleepUntil(synthesisEngine.currentTime + 0.02)
+        assertTrue(ramp.isEnabled, "Ramp should wake up on subsequent queueOn")
+
+        // Note Off and let finish
+        reader.dataQueue.queueOff(envelope)
+        checkSleepUntil(synthesisEngine.currentTime + 0.15)
+        assertFalse(ramp.isEnabled, "Ramp should be disabled again after second note finishes")
+    }
+
+    @Test
+    fun testAutoDisableWithMultipleQueuedEnvelopes() {
+        val ramp = LinearRamp()
+        val reader = VariableRateMonoReader()
+        val adder = Add()
+
+        synthesisEngine.add(ramp)
+        synthesisEngine.add(reader)
+        synthesisEngine.add(adder)
+
+        reader.output.connect(adder.inputA)
+        ramp.output.connect(adder.inputB)
+
+        val env1 = SegmentedEnvelope(
+            doubleArrayOf(
+                0.05, 1.0,
+                0.05, 0.0
+            )
+        )
+        val env2 = SegmentedEnvelope(
+            doubleArrayOf(
+                0.05, 1.0,
+                0.05, 0.0
+            )
+        )
+
+        reader.rate.set(1.0)
+        reader.setupAutoDisable(ramp)
+        assertFalse(ramp.isEnabled, "Ramp should start disabled")
+
+        synthesisEngine.start()
+        adder.start()
+
+        // Queue both envelopes together
+        reader.dataQueue.queue(env1)
+        reader.dataQueue.queue(env2)
+
+        checkSleepUntil(synthesisEngine.currentTime + 0.02)
+        assertTrue(ramp.isEnabled, "Ramp should be enabled while first envelope is playing")
+
+        // Advance to when first envelope finishes and second envelope is playing (0.1s in)
+        checkSleepUntil(synthesisEngine.currentTime + 0.10)
+        assertTrue(ramp.isEnabled, "Ramp should remain enabled while second envelope is playing")
+
+        // Advance past end of second envelope (0.2s total)
+        checkSleepUntil(synthesisEngine.currentTime + 0.15)
+        assertFalse(ramp.isEnabled, "Ramp should be disabled only after all queued envelopes complete")
+    }
 }

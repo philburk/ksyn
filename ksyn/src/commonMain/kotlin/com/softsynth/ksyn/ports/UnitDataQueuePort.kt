@@ -166,9 +166,12 @@ class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name)
             loopingBlock = null
         }
         if (finishingBlock != null) {
-            finishingBlock?.callback?.finished(currentBlock ?: finishingBlock!!) // FIXME - Should this pass finishingBlock?!
+            val finished = finishingBlock!!
             finishingBlock = null
-            if (isAutoDisableEnabled && !hasMore()) {
+            finished.callback?.finished(
+                currentBlock ?: finished
+            ) // FIXME - Should this pass finishingBlock?!
+            if (finished.isEndBlock) {
                 checkAutoDisable()
             }
         }
@@ -345,15 +348,10 @@ class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name)
         queueLoop(queueableData, 0, queueableData.numFrames)
     }
 
-    /** Queue the data to the port for immediate use. */
-    fun queueLoop(queueableData: SequentialData, startFrame: Int, numFrames: Int) {
-        queueLoop(queueableData, startFrame, numFrames, LOOP_IF_LAST)
-    }
-
     /**
      * Queue the data to the port for immediate use with a specified number of loops.
      */
-    fun queueLoop(queueableData: SequentialData, startFrame: Int, numFrames: Int, numLoops: Int) {
+    fun queueLoop(queueableData: SequentialData, startFrame: Int, numFrames: Int, numLoops: Int = LOOP_IF_LAST) {
         val command = createQueueDataCommand(queueableData, startFrame, numFrames)
         command.numLoops = numLoops
         queueCommand { command.run() }
@@ -407,12 +405,7 @@ class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name)
     }
 
     /** Schedule queueOff now! */
-    fun queueOff(queueableData: SequentialData) {
-        queueOff(queueableData, false)
-    }
-
-    /** Schedule queueOff now! */
-    fun queueOff(queueableData: SequentialData, ifStop: Boolean) {
+    fun queueOff(queueableData: SequentialData, ifStop: Boolean = false) {
         getSynthesisEngine()?.let {
             queueOff(queueableData, ifStop, it.createTimeStamp())
         }
@@ -531,18 +524,14 @@ class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name)
     fun clear(timeStamp: TimeStamp) {
         scheduleCommand(timeStamp.time) {
             clearQueue()
-            if (isAutoDisableEnabled) {
-                checkAutoDisable()
-            }
+            checkAutoDisable()
         }
     }
 
     fun clear() {
         queueCommand {
             clearQueue()
-            if (isAutoDisableEnabled) {
-                checkAutoDisable()
-            }
+            checkAutoDisable()
         }
     }
 

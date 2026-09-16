@@ -44,5 +44,13 @@ abstract class QueueDataCommand(
         super.numFrames = numFrames
     }
 
+    open val isEndBlock: Boolean
+        get() {
+            if (numLoops == UnitDataQueuePort.LOOP_IF_LAST || numLoops > 0) return false
+            if (isAutoStop) return true
+            val data = sequentialData ?: return true
+            return startFrame + numFrames >= data.numFrames
+        }
+
     abstract fun run()
 }
