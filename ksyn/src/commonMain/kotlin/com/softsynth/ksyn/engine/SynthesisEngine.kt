@@ -338,10 +338,8 @@ class SynthesisEngine() : Synthesizer {
             ?: throw RuntimeException("Audio Output not configured in start() method.")
     }
 
-    private suspend fun internalStopUnit(unit: UnitGenerator) {
-        runningUnitListMutex.withLock {
-            runningUnitList.remove(unit)
-        }
+    private fun internalStopUnit(unit: UnitGenerator) {
+        runningUnitList.remove(unit)
         unit.flattenOutputs()
     }
 
@@ -367,10 +365,7 @@ class SynthesisEngine() : Synthesizer {
 
     override fun stopUnit(unit: UnitGenerator, timeStamp: TimeStamp) {
         scheduleCommand(timeStamp) {
-            // Launch a non-blocking coroutine instead of using runBlocking
-            engineScope.launch {
-                internalStopUnit(unit)
-            }
+            internalStopUnit(unit)
         }
     }
     override fun startUnit(unit: UnitGenerator) {
