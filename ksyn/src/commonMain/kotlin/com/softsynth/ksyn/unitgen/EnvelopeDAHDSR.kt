@@ -93,7 +93,9 @@ class EnvelopeDAHDSR : UnitGate() {
                 }
                 State.DELAYING -> {
                     outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                    if (input.isOff) {
+                    if (triggered) {
+                        startDelay(i)
+                    } else if (input.isOff) {
                         startRelease(i)
                     } else {
                         countdown -= 1
@@ -103,26 +105,34 @@ class EnvelopeDAHDSR : UnitGate() {
                     }
                 }
                 State.ATTACKING -> {
-                    // Increment first so we can render fast attacks.
-                    level += increment
-                    if (level >= 1.0) {
-                        level = 1.0
-                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                        startHold(i)
+                    if (triggered) {
+                        startDelay(i)
                     } else {
-                        outputs[i] = (level * amplitudes[i].toDouble()).toSample()
-                        if (input.isOff) {
-                            startRelease(i)
+                        // Increment first so we can render fast attacks.
+                        level += increment
+                        if (level >= 1.0) {
+                            level = 1.0
+                            outputs[i] = (level * amplitudes[i].toDouble()).toSample()
+                            startHold(i)
+                        } else {
+                            outputs[i] = (level * amplitudes[i].toDouble()).toSample()
+                            if (input.isOff) {
+                                startRelease(i)
+                            }
                         }
                     }
                 }
                 State.HOLDING -> {
                     outputs[i] = amplitudes[i] // level is 1.0
-                    countdown -= 1
-                    if (countdown <= 0) {
-                        startDecay(i)
-                    } else if (input.isOff) {
-                        startRelease(i)
+                    if (triggered) {
+                        startDelay(i)
+                    } else {
+                        countdown -= 1
+                        if (countdown <= 0) {
+                            startDecay(i)
+                        } else if (input.isOff) {
+                            startRelease(i)
+                        }
                     }
                 }
                 State.DECAYING -> {
