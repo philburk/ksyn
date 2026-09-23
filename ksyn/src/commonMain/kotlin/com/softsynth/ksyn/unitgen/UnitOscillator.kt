@@ -51,13 +51,11 @@ abstract class UnitOscillator : UnitGenerator(), UnitVoice {
      * Convert a frequency in Hertz to a phaseIncrement in the range -1.0 to +1.0
      */
     fun convertFrequencyToPhaseIncrement(freq: Double): Double {
-        var phaseIncrement: Double
-        try {
-            phaseIncrement = freq * synthesisEngine!!.getInverseNyquist()
-        } catch (e: NullPointerException) {
-            throw NullPointerException(
-                "Null Synth! You probably forgot to add this unit to the Synthesizer!"
-            )
+        val engine = synthesisEngine
+        var phaseIncrement: Double = if (engine != null) {
+            freq * engine.getInverseNyquist()
+        } else {
+            freq * (2.0 / frameRate)
         }
         // Clip to range.
         phaseIncrement = if (phaseIncrement > 1.0) 1.0 else (if (phaseIncrement < -1.0)
