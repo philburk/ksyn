@@ -30,8 +30,17 @@ open class Circuit : UnitGenerator() {
     private val portAliases = LinkedHashMap<String, UnitPort>()
 
     override fun generate() {
-        for (unit in units) {
-            unit.generate()
+        val engine = synthesisEngine
+        if (engine != null && engine.isPullDataEnabled) {
+            // Use pullData() so a unit that was already pulled this block is not generated twice.
+            val frameCount = engine.frameCount
+            for (unit in units) {
+                unit.pullData(frameCount)
+            }
+        } else {
+            for (unit in units) {
+                unit.generate()
+            }
         }
     }
 

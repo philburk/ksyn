@@ -3,6 +3,7 @@ package com.softsynth.ksyn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -15,7 +16,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,19 +24,33 @@ import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import com.softsynth.audiobridge.AudioResult
 import com.softsynth.ksyn.compose.BlackWhiteKeyboard
+import com.softsynth.ksyn.compose.Oscilloscope
 import com.softsynth.ksyn.data.FloatSample
 import com.softsynth.math.AudioMath
+import com.softsynth.ksyn.unitgen.Circuit
 import com.softsynth.ksyn.unitgen.LineOut
+import com.softsynth.ksyn.unitgen.ScopeProbe
 import com.softsynth.ksyn.unitgen.VariableRateMonoReader
 import com.softsynth.ksyn.util.SampleLoader
 import ksyn_project.demo.generated.resources.Res
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
+/** A sample reader wrapped in a Circuit, like a sample-playing voice. */
+class SamplePlayerCircuit : Circuit() {
+    val reader = VariableRateMonoReader()
+
+    init {
+        add(reader)
+    }
+}
+
 class PlaySamplePlayer : KSynPlayable() {
     val ksynAudioBridge: KSynAudioBridge
     val synth = KSyn.createSynthesizer()
     val lineOut = LineOut()
-    val sampleReader = VariableRateMonoReader()
+    val playerCircuit = SamplePlayerCircuit()
+    val sampleReader = playerCircuit.reader
+    val scope = ScopeProbe(numChannels = 1)
 
     var sample: FloatSample? = null
     var isLoaded by mutableStateOf(false)
@@ -45,11 +59,13 @@ class PlaySamplePlayer : KSynPlayable() {
     init {
         ksynAudioBridge = KSynAudioBridge(synth)
         synth.add(lineOut)
-        synth.add(sampleReader)
+        synth.add(playerCircuit)
+        synth.add(scope)
 
         // Connect the mono reader to both left and right outputs
         sampleReader.output.connect(0, lineOut.input, 0)
         sampleReader.output.connect(0, lineOut.input, 1)
+        sampleReader.output.connect(0, scope.input, 0)
     }
 
     @OptIn(ExperimentalResourceApi::class)
@@ -85,13 +101,19 @@ class PlaySamplePlayer : KSynPlayable() {
 
     override fun start(): AudioResult {
         lineOut.start()
+        playerCircuit.start()
+        scope.start()
         return ksynAudioBridge.start()
     }
 
     override fun stop() {
         ksynAudioBridge.stop()
         lineOut.stop()
+        playerCircuit.stop()
+        scope.stop()
     }
+
+    override fun getScopeProbe(): ScopeProbe = scope
 }
 
 class PlaySampleScreen : Screen {
@@ -100,7 +122,6 @@ class PlaySampleScreen : Screen {
         val navigator = LocalNavigator.currentOrThrow
         val player = remember { PlaySamplePlayer() }
         var isPlaying by remember { mutableStateOf(false) }
-        val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
             player.loadSample()
@@ -119,8 +140,8 @@ class PlaySampleScreen : Screen {
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
-                
-                Text("Clarinet.wav (Native Compose Resources Decoder)", style = MaterialTheme.typography.titleMedium)
+
+                Text("Clarinet.wav in a Circuit", style = MaterialTheme.typography.titleMedium)
                 Text("Playback Rate Scaler: ${kotlin.math.round(player.currentRate * 1000) / 1000.0}x", color = MaterialTheme.colorScheme.primary)
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -133,6 +154,11 @@ class PlaySampleScreen : Screen {
                         if (isPlaying) player.stopNote()
                     },
                     numNotes = 25
+                )
+
+                Oscilloscope(
+                    probe = player.scope,
+                    modifier = Modifier.fillMaxWidth().height(200.dp).padding(top = 16.dp),
                 )
             }
         }
