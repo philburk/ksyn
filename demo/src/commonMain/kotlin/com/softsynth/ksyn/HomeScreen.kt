@@ -77,6 +77,9 @@ class HomeScreen : Screen {
                     onClick = { navigator.push(ChebyshevSongScreen()) }
                 ) { Text("Chebyshev Song") }
                 Button(
+                    onClick = { navigator.push(PluckedStringScreen()) }
+                ) { Text("Plucked String") }
+                Button(
                     onClick = { navigator.push(FullDuplexScreen()) }
                 ) { Text("Full Duplex") }
             }

@@ -23,6 +23,14 @@ class SimpleDelay(length: Int) {
     private val mBuffer: FloatArray = FloatArray(length)
     private var mCursor: Int = 0
 
+    val length: Int
+        get() = mBuffer.size
+
+    /** Set all of the delayed values to zero. */
+    fun clear() {
+        mBuffer.fill(0.0f)
+    }
+
     /**
      * Read a value from the delay line.
      * @param position positive delay in frames
