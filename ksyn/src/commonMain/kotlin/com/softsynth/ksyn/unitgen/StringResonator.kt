@@ -50,7 +50,8 @@ import kotlin.math.pow
  * @see FixedStringResonator
  * @see VariableStringResonator
  */
-abstract class StringResonator(val minFrequency: Double = DEFAULT_MIN_FREQUENCY) : UnitFilter() {
+abstract class StringResonator(val minFrequency: Double = DEFAULT_MIN_FREQUENCY) : UnitFilter(),
+    SupportsAutoDisable {
     /** Fundamental frequency in Hz. */
     val frequency = UnitInputPort("Frequency", 220.0)
 
@@ -82,7 +83,10 @@ abstract class StringResonator(val minFrequency: Double = DEFAULT_MIN_FREQUENCY)
     private var blockBrightness = -1.0
 
     private var autoDisableTarget: UnitGenerator? = null
-    var isAutoDisableEnabled = false
+    private var autoDisableEnabled = false
+
+    override val isAutoDisableEnabled: Boolean
+        get() = autoDisableEnabled
 
     /** The unit is disabled when the signal in the loop stays below this level. Default is -90 dB. */
     var autoDisableThreshold = 3.0e-5f
@@ -153,7 +157,7 @@ abstract class StringResonator(val minFrequency: Double = DEFAULT_MIN_FREQUENCY)
             peak = max(peak, max(abs(x), abs(excitation)))
         }
 
-        if (isAutoDisableEnabled) {
+        if (autoDisableEnabled) {
             checkAutoDisable(peak)
         }
     }
@@ -214,12 +218,24 @@ abstract class StringResonator(val minFrequency: Double = DEFAULT_MIN_FREQUENCY)
      * A disabled unit is not run, so it cannot notice a new excitation.
      * Whatever starts the excitation must enable the unit again, for example in noteOn().
      *
-     * @param unit the unit to disable, for example a Circuit containing this resonator
+     * @param unit the unit to disable, for example a Circuit containing this resonator.
+     *     Defaults to this resonator.
      */
-    fun setupAutoDisable(unit: UnitGenerator = this) {
+    override fun setupAutoDisable(unit: UnitGenerator) {
         autoDisableTarget = unit
-        isAutoDisableEnabled = true
+        autoDisableEnabled = true
+        quietFrames = 0
         unit.isEnabled = false
+    }
+
+    override fun setAutoDisableEnabled(enabled: Boolean) {
+        val wasEnabled = autoDisableEnabled
+        quietFrames = 0
+        autoDisableEnabled = enabled
+        if (wasEnabled && !enabled) {
+            // Nothing would enable it again, so let it run.
+            (autoDisableTarget ?: this).isEnabled = true
+        }
     }
 
     /** Silence the string by clearing the delay line and filters. */

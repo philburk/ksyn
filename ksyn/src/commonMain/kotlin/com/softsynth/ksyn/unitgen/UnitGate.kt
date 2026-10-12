@@ -24,7 +24,7 @@ import com.softsynth.ksyn.ports.UnitOutputPort
  * 
  * @author Phil Burk (C) 2012 Mobileer Inc
  */
-abstract class UnitGate : UnitGenerator(), UnitSource {
+abstract class UnitGate : UnitGenerator(), UnitSource, SupportsAutoDisable {
     /**
      * Input that triggers the envelope. Use amplitude port if you want to connect a signal to be
      * modulated by the envelope.
@@ -43,11 +43,18 @@ abstract class UnitGate : UnitGenerator(), UnitSource {
 
     /**
      * Specify a unit to be disabled when the envelope finishes.
-     * 
-     * @param unit
+     *
+     * @param unit the UnitGenerator to disable. Defaults to this envelope.
      */
-    fun setupAutoDisable(unit: UnitGenerator) {
+    override fun setupAutoDisable(unit: UnitGenerator) {
         input.setupAutoDisable(unit)
+    }
+
+    override val isAutoDisableEnabled: Boolean
+        get() = input.isAutoDisableEnabled
+
+    override fun setAutoDisableEnabled(enabled: Boolean) {
+        input.setAutoDisableEnabled(enabled)
     }
 
 }

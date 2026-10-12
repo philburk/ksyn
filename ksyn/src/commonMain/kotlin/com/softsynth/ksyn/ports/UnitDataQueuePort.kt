@@ -504,11 +504,14 @@ class UnitDataQueuePort(name: String, var numChannels: Int = 1) : UnitPort(name)
 
     /**
      * Request the target UnitGenerator be disabled when data finishes.
+     * The target is remembered, so auto disable can be turned off and on again.
+     * When turned off, the target is enabled because nothing would enable it again.
      */
     fun setAutoDisableEnabled(enabled: Boolean) {
+        val wasEnabled = isAutoDisableEnabled
         isAutoDisableEnabled = enabled
-        if (!enabled) {
-            autoDisableTarget = null
+        if (wasEnabled && !enabled) {
+            getTargetUnit()?.isEnabled = true
         }
     }
 

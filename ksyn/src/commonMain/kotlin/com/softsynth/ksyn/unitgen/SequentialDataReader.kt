@@ -25,7 +25,7 @@ import com.softsynth.ksyn.ports.UnitOutputPort
  *
  * @author Phil Burk (C) 2009 Mobileer Inc
  */
-abstract class SequentialDataReader : UnitGenerator() {
+abstract class SequentialDataReader : UnitGenerator(), SupportsAutoDisable {
     var dataQueue: UnitDataQueuePort
     var amplitude: UnitInputPort
     lateinit var output: UnitOutputPort
@@ -43,11 +43,14 @@ abstract class SequentialDataReader : UnitGenerator() {
      *
      * @param unit the UnitGenerator (such as a Circuit or Voice) to disable. Defaults to this reader.
      */
-    fun setupAutoDisable(unit: UnitGenerator = this) {
+    override fun setupAutoDisable(unit: UnitGenerator) {
         dataQueue.setupAutoDisable(unit)
     }
 
-    fun setAutoDisableEnabled(enabled: Boolean) {
+    override val isAutoDisableEnabled: Boolean
+        get() = dataQueue.isAutoDisableEnabled
+
+    override fun setAutoDisableEnabled(enabled: Boolean) {
         dataQueue.setAutoDisableEnabled(enabled)
     }
 }

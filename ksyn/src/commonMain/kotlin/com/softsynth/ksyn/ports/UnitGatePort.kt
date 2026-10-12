@@ -103,13 +103,18 @@ open class UnitGatePort(name: String) : UnitInputPort(1, name) {
     }
 
     /**
-     * Request the containing UnitGenerator be disabled when checkAutoDisabled() is called. This can
+     * Request the gated UnitGenerator be disabled when checkAutoDisabled() is called. This can
      * be used to reduce CPU load.
+     * When turned off, the gated unit is enabled so that it runs until it is triggered again.
      *
      * @param autoDisableEnabled
      */
     fun setAutoDisableEnabled(autoDisableEnabled: Boolean) {
+        val wasEnabled = isAutoDisableEnabled
         this.isAutoDisableEnabled = autoDisableEnabled
+        if (wasEnabled && !autoDisableEnabled) {
+            getGatedUnit().isEnabled = true
+        }
     }
 
     /**
