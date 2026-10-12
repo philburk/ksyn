@@ -15,6 +15,7 @@ class TestSupportsAutoDisable {
         VariableRateStereoReader(),
         FixedStringResonator(),
         VariableStringResonator(),
+        FilterComb(),
     )
 
     @Test

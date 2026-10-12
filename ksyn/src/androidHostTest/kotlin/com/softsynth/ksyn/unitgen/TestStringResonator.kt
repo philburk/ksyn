@@ -58,8 +58,11 @@ class TestStringResonator : NonRealTimeTestCase() {
         checkSleepUntil(synthesisEngine.currentTime + seconds)
     }
 
-    /** Excite the resonator and record its output. */
-    private fun record(resonator: StringResonator, frequency: Double, decayTime: Double,
+    /**
+     * Excite the resonator and record its output.
+     * The brightness is only used by a StringResonator.
+     */
+    private fun record(resonator: FilterComb, frequency: Double, decayTime: Double,
                        brightness: Double, seconds: Double): List<Float> {
         val exciter = FixedRateMonoReader()
         val recorder = Recorder()
@@ -71,7 +74,7 @@ class TestStringResonator : NonRealTimeTestCase() {
 
         resonator.frequency.set(frequency)
         resonator.decay.set(decayTime)
-        resonator.brightness.set(brightness)
+        (resonator as? StringResonator)?.brightness?.set(brightness)
         exciter.dataQueue.queue(makeBurst(frequency))
 
         synthesisEngine.start()
@@ -101,7 +104,7 @@ class TestStringResonator : NonRealTimeTestCase() {
     }
 
     /** Measure the frequency from how far the phase of the fundamental drifts between two windows. */
-    private fun measureCentsError(resonator: StringResonator, frequency: Double): Double {
+    private fun measureCentsError(resonator: FilterComb, frequency: Double): Double {
         val seconds = 0.5
         val data = record(resonator, frequency, decayTime = 5.0, brightness = 0.5, seconds = seconds)
         val frameRate = synthesisEngine.frameRate.toDouble()
@@ -118,7 +121,7 @@ class TestStringResonator : NonRealTimeTestCase() {
         return 1200.0 * log2((frequency + frequencyError) / frequency)
     }
 
-    private fun checkTuning(name: String, create: () -> StringResonator) {
+    private fun checkTuning(name: String, create: () -> FilterComb) {
         for (frequency in doubleArrayOf(55.0, 110.0, 220.0, 445.5, 880.0, 1234.5, 2000.0)) {
             setUp() // fresh engine for each frequency
             val cents = measureCentsError(create(), frequency)
@@ -138,14 +141,25 @@ class TestStringResonator : NonRealTimeTestCase() {
         checkTuning("Variable") { VariableStringResonator() }
     }
 
+    @Test
+    fun testCombAllPassTuning() {
+        checkTuning("Comb AllPass") { FilterComb(interpolation = FilterComb.Interpolation.ALL_PASS) }
+    }
+
+    @Test
+    fun testCombLagrangeTuning() {
+        checkTuning("Comb Lagrange") { FilterComb(interpolation = FilterComb.Interpolation.LAGRANGE) }
+    }
+
     /**
      * The fundamental should drop 30 dB in half of the decay time.
      * The decay should not depend on the brightness.
      */
-    private fun checkDecay(name: String, create: () -> StringResonator) {
+    private fun checkDecay(name: String, brightnessValues: DoubleArray = doubleArrayOf(0.0, 0.5, 1.0),
+                           create: () -> FilterComb) {
         val frequency = 220.0
         for (decayTime in doubleArrayOf(0.5, 3.0))
-        for (brightness in doubleArrayOf(0.0, 0.5, 1.0)) {
+        for (brightness in brightnessValues) {
             setUp()
             val data = record(create(), frequency, decayTime, brightness, seconds = 0.15 + (decayTime / 2))
             val frameRate = synthesisEngine.frameRate.toDouble()
@@ -169,6 +183,14 @@ class TestStringResonator : NonRealTimeTestCase() {
     @Test
     fun testVariableDecay() {
         checkDecay("Variable") { VariableStringResonator() }
+    }
+
+    @Test
+    fun testCombDecay() {
+        // A comb has no brightness, so only run it once per decay time.
+        val noBrightness = doubleArrayOf(0.5)
+        checkDecay("Comb AllPass", noBrightness) { FilterComb(interpolation = FilterComb.Interpolation.ALL_PASS) }
+        checkDecay("Comb Lagrange", noBrightness) { FilterComb(interpolation = FilterComb.Interpolation.LAGRANGE) }
     }
 
     @Test

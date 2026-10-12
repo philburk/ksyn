@@ -16,11 +16,6 @@
 
 package com.softsynth.ksyn.unitgen
 
-import com.softsynth.ksyn.dsp.AllPassDelay
-import kotlin.math.PI
-import kotlin.math.floor
-import kotlin.math.sin
-
 /**
  * String resonator tuned with a first-order allpass filter.
  *
@@ -29,27 +24,5 @@ import kotlin.math.sin
  * The frequency is read once per block. Changing it while the string rings can cause a small transient.
  * For pitch bends use [VariableStringResonator].
  */
-class FixedStringResonator(minFrequency: Double = DEFAULT_MIN_FREQUENCY) : StringResonator(minFrequency) {
-    private val allPass = AllPassDelay(1)
-    private var integerDelay = 2
-
-    override fun updateTuning(frequency: Double) {
-        val totalDelay = delayFor(frequency)
-        // Keep the allpass delay between 0.5 and 1.5 frames, where its coefficient is small
-        // and its delay is nearly the same for all of the harmonics.
-        integerDelay = floor(totalDelay - 0.5).toInt()
-        val fraction = totalDelay - integerDelay
-        // Exact phase delay at the fundamental, not just at DC.
-        val omega = 2.0 * PI * frequency / frameRate
-        allPass.coefficient = (sin(omega * (1.0 - fraction) / 2.0)
-                / sin(omega * (1.0 + fraction) / 2.0)).toFloat()
-    }
-
-    override fun readDelayed(frequency: Float): Float {
-        return allPass.process(delayLine.read(integerDelay))
-    }
-
-    override fun clearTuning() {
-        allPass.clear()
-    }
-}
+class FixedStringResonator(minFrequency: Double = DEFAULT_MIN_FREQUENCY) :
+    StringResonator(minFrequency, Interpolation.ALL_PASS)
