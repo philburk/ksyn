@@ -37,6 +37,8 @@ class StochasticGrainScheduler : GrainScheduler {
         val dens = if (density < MIN_DENSITY) MIN_DENSITY else density
         val rawGap = duration * (1.0 - dens) / dens
         val gapRange = rawGap.coerceAtLeast(MIN_GAP_RANGE)
-        return pseudoRandom.nextRandomDouble() * gapRange
+        // random() is 0 to 1. A gap cannot be negative; with -1 to 1, half of all gaps were
+        // zero, so the cloud was denser than the density asked for, even at zero.
+        return pseudoRandom.random() * gapRange
     }
 }

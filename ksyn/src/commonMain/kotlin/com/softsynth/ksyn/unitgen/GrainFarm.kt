@@ -22,6 +22,8 @@ import com.softsynth.ksyn.ports.UnitOutputPort
 import com.softsynth.ksyn.toSample
 import com.softsynth.ksyn.data.AudioSample
 import com.softsynth.ksyn.util.PseudoRandom
+import kotlin.math.floor
+import kotlin.math.min
 import kotlin.math.pow
 
 /**
@@ -85,6 +87,8 @@ open class GrainFarm : UnitGenerator(), UnitSource {
         var lastDuration: Double = 0.0
         var state: Int = STATE_IDLE
         private var gapError: Double = 0.0
+        /** The density when the current gap was chosen. */
+        private var gapDensity: Double = 0.0
 
         fun next(i: Int): AudioSample {
             var out: AudioSample = 0.0f
@@ -95,12 +99,26 @@ open class GrainFarm : UnitGenerator(), UnitSource {
                     startGap(i)
                 }
             } else if (state == STATE_GAP) {
+                // A gap chosen at a very low density can be days long. If the density has
+                // since risen a lot, for example an envelope coming back up from zero, choose
+                // a new gap rather than waiting out the old one.
+                if (density.getValues()[i] > gapDensity * GAP_RECHOOSE_RATIO) {
+                    startGap(i)
+                }
                 if (countdown > 0) {
                     countdown -= 1
-                } 
+                }
                 if (countdown <= 0) {
                     state = STATE_RUNNING
                     grain.reset()
+
+                    // The rate is only known for sure once the synth is running, which is often
+                    // after allocate(), and it changes if audio restarts on another device.
+                    // Set it before the grain's rate and duration, which depend on it.
+                    val currentFrameRate = frameRate.toFloat()
+                    if (grain.frameRate != currentFrameRate) {
+                        grain.frameRate = currentFrameRate
+                    }
 
                     setupGrain(grain, i)
 
@@ -131,10 +149,14 @@ open class GrainFarm : UnitGenerator(), UnitSource {
         private fun startGap(i: Int) {
             state = STATE_GAP
             val dens = density.getValues()[i].toDouble()
-            var gap = scheduler.nextGap(lastDuration, dens) * (synthesisEngine?.frameRate?.toDouble() ?: 44100.0)
+            gapDensity = dens
+            var gap = scheduler.nextGap(lastDuration, dens) * frameRate
             gap += gapError
-            countdown = gap.toInt()
-            gapError = gap - countdown
+            val wholeFrames = floor(gap)
+            countdown = min(wholeFrames, MAX_GAP_FRAMES).toInt()
+            // Only the fraction of a frame carries over to the next gap. Carrying the part of a
+            // huge gap that did not fit in countdown would make the next gap huge as well.
+            gapError = gap - wholeFrames
         }
     }
 
@@ -189,6 +211,12 @@ open class GrainFarm : UnitGenerator(), UnitSource {
     }
 
     companion object {
+        /** Choose a new gap when the density rises above this multiple of the density the gap was chosen at. */
+        private const val GAP_RECHOOSE_RATIO = 2.0
+
+        /** Longest gap in frames, so a gap chosen at a density near zero still fits in an Int. */
+        private const val MAX_GAP_FRAMES = 1.0e9
+
         private const val STATE_IDLE = 0
         private const val STATE_GAP = 1
         private const val STATE_RUNNING = 2

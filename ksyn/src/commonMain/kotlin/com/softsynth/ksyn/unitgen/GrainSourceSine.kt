@@ -16,13 +16,15 @@
 
 package com.softsynth.ksyn.unitgen
 
-import kotlin.math.PI
 import com.softsynth.ksyn.data.AudioSample
 
 /**
  * A simple sine wave generator for a Grain. This uses the same fast Taylor expansion that the
  * SineOscillator uses.
- * 
+ *
+ * A rate of 1.0 plays concert A, [CONCERT_A] Hz, so a rate of Hz / 440 plays a given frequency.
+ * The pitch depends on [frameRate], so set it before [setRate].
+ *
  * @author Phil Burk (C) 2011 Mobileer Inc
  */
 class GrainSourceSine : GrainCommon(), GrainSource {
@@ -42,6 +44,16 @@ class GrainSourceSine : GrainCommon(), GrainSource {
     }
 
     override fun setRate(rate: Double) {
-        phaseIncrement = rate * 0.1 / PI
+        // A new source has no frame rate yet, so assume the default rather than divide by zero.
+        val currentFrameRate = if (frameRate > 0.0f) frameRate.toDouble() else DEFAULT_FRAME_RATE
+        // The phase runs from -1.0 to +1.0 over one cycle, so it advances 2 * frequency / frameRate per frame.
+        phaseIncrement = rate * 2.0 * CONCERT_A / currentFrameRate
+    }
+
+    companion object {
+        /** Frequency in Hz played at a rate of 1.0. */
+        const val CONCERT_A = 440.0
+
+        private const val DEFAULT_FRAME_RATE = 44100.0
     }
 }
