@@ -13,6 +13,7 @@ class RangeConverter : UnitFilter() {
     val max = UnitInputPort("Max")
 
     init {
+        input.setup(-1.0f, 0.0f, 1.0f)
         addPort(min)
         min.setup(0.0f, 40.0f, 100.0f)
         addPort(max)
