@@ -63,9 +63,9 @@ object KSyn {
     // and ksyn-compose/build.gradle.kts.
     private const val VERSION_MAJOR = 1
     private const val VERSION_MINOR = 3
-    private const val VERSION_REVISION = 2
-    const val BUILD_NUMBER: Int = 472
-    private val BUILD_DATE = "2026-09-14"
+    private const val VERSION_REVISION = 4
+    const val BUILD_NUMBER: Int = 473
+    private val BUILD_DATE = "2026-10-13"
 
     // These are built from the updated values.
     val VERSION: String = (VERSION_MAJOR.toString() + "." + VERSION_MINOR + "."
