@@ -1,4 +1,4 @@
-# Prompts used for Claude Code
+# Some of the Prompts used for Claude and Gemini
 
 ## SegmentedEnvelopeEditor
 ```
