@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
-package com.softsynth.ksyn.data/**
+package com.softsynth.ksyn.data
+
+/**
  * A marker for an audio sample.
  *
  * @author (C) 2012 Phil Burk, Mobileer Inc
