@@ -119,12 +119,28 @@ open class FloatSample() : AudioSampleData(), Function {
         return ((target - source) * phase + source)
     }
 
+    /**
+     * Interpolate between two adjacent mono samples using a 64-bit double-precision
+     * fractional index to preserve precision when indexing into large samples.
+     * Clips safely to the bounds of the sample [0, numFrames - 1].
+     */
+    fun interpolate(fractionalIndex: Double): AudioSample {
+        val frames = numFrames
+        if (frames <= 0) return 0.0f
+        if (fractionalIndex <= 0.0) return buffer[0]
+        val maxIndex = frames - 1
+        if (fractionalIndex >= maxIndex.toDouble()) return buffer[maxIndex]
+        val index = fractionalIndex.toInt()
+        val phase = (fractionalIndex - index).toFloat()
+        val source = buffer[index]
+        val target = buffer[index + 1]
+        return ((target - source) * phase + source)
+    }
+
     override fun evaluate(input: Double): Double {
-        var normalizedInput = (input + 1.0) * 0.5
-        if (normalizedInput < 0.0) normalizedInput = 0.0
-        else if (normalizedInput > 1.0) normalizedInput = 1.0
-        val fractionalIndex = (numFrames - 1.01) * normalizedInput
-        return interpolate(fractionalIndex.toFloat()).toDouble()
+        val normalizedInput = ((input + 1.0) * 0.5).coerceIn(0.0, 1.0)
+        val fractionalIndex = (numFrames - 1) * normalizedInput
+        return interpolate(fractionalIndex).toDouble()
     }
 
     /**

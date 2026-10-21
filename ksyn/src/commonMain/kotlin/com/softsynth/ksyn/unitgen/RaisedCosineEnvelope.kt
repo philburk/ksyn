@@ -48,7 +48,7 @@ class RaisedCosineEnvelope : GrainCommon(), GrainEnvelope {
         return if (phase > (2.0 * PI)) {
             0.0f
         } else {
-            (0.5 - (0.5 * cos(phase))).toFloat() // TODO optimize using Taylor expansion
+            (0.5 - (0.5 * cos(phase))).toFloat() // TODO optimize using Cordic or Taylor
         }
     }
 

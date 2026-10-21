@@ -57,7 +57,7 @@ open class GrainFarm : UnitGenerator(), UnitSource {
     private var states: Array<GrainState>? = null
     private var countScaler: AudioSample = 1.0f
     private val scheduler: GrainScheduler = StochasticGrainScheduler()
-    private val randomizer = PseudoRandom()
+    protected val randomizer = PseudoRandom()
 
     init {
         addPort(density)
@@ -199,6 +199,7 @@ open class GrainFarm : UnitGenerator(), UnitSource {
         val localStates = states ?: return // If no grains allocated, output nothing
         
         for (i in 0 until Synthesizer.FRAMES_PER_BLOCK) {
+            onFrame(i)
             var result: AudioSample = 0.0f
 
             // Mix the grains together.
@@ -209,6 +210,13 @@ open class GrainFarm : UnitGenerator(), UnitSource {
             outputs[i] = result * amplitudes[i] * countScaler
         }
     }
+
+    /**
+     * Hook called once per frame inside [generate] before the active grains are mixed.
+     * Subclasses such as [DelayGrainFarm] can override this to write incoming audio
+     * into a delay buffer.
+     */
+    protected open fun onFrame(frameIndex: Int) {}
 
     companion object {
         /** Choose a new gap when the density rises above this multiple of the density the gap was chosen at. */

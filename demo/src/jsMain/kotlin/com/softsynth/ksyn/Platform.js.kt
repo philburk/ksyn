@@ -10,3 +10,5 @@ actual fun getPlatform(): Platform = JsPlatform()
 
 @Composable
 actual fun getPlatformContext(): Any? = null
+
+actual suspend fun pickAudioFileBytes(context: Any?): Pair<String, ByteArray>? = null

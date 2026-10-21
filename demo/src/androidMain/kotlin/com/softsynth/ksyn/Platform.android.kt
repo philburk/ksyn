@@ -14,3 +14,5 @@ actual fun getPlatform(): Platform = AndroidPlatform()
 actual fun getPlatformContext(): Any? {
     return LocalContext.current
 }
+
+actual suspend fun pickAudioFileBytes(context: Any?): Pair<String, ByteArray>? = null

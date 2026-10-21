@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Phil Burk, Mobileer Inc
+ * Copyright 2026 Phil Burk, Mobileer Inc
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,51 +16,8 @@
 
 package com.softsynth.ksyn.unitgen
 
-import com.softsynth.ksyn.data.FloatSample
-import com.softsynth.ksyn.ports.UnitInputPort
-
 /**
- * A GrainFarm that uses a FloatSample as source material. Use a ramp to move
- * smoothly through the sample by connecting to the position port.
- *
- * <pre><code>
- *    synth.add(sampleGrainFarm = SampleGrainFarm())
- *    sampleGrainFarm.setSample(sample)
- *    // Use a ramp to move smoothly within the file.
- *    synth.add(ramp = ContinuousRamp())
- *    ramp.output.connect(sampleGrainFarm.position)
- * </code></pre>
- *
- * @author Phil Burk (C) 2011 Mobileer Inc
+ * Type alias preserving backwards compatibility with [SampleGrains].
  */
-class SampleGrainFarm : GrainFarm() {
-    private var sample: FloatSample? = null
-    val position: UnitInputPort
-    val positionRange: UnitInputPort
-
-    init {
-        position = UnitInputPort("Position", 0.0)
-        addPort(position)
-        positionRange = UnitInputPort("PositionRange", 0.0)
-        addPort(positionRange)
-    }
-
-    override fun allocate(numGrains: Int) {
-        val grainArray = Array(numGrains) {
-            Grain(SampleGrainSource(), RaisedCosineEnvelope())
-        }
-        setGrainArray(grainArray)
-    }
-
-    override fun setupGrain(grain: Grain, i: Int) {
-        val sampleGrainSource = grain.source as SampleGrainSource
-        sample?.let { sampleGrainSource.setSample(it) }
-        sampleGrainSource.setPosition(position.getValues()[i].toDouble())
-        sampleGrainSource.setPositionRange(positionRange.getValues()[i].toDouble())
-        super.setupGrain(grain, i)
-    }
-
-    fun setSample(sample: FloatSample) {
-        this.sample = sample
-    }
-}
+@Deprecated("Renamed to SampleGrains", ReplaceWith("SampleGrains"))
+typealias SampleGrainFarm = SampleGrains
