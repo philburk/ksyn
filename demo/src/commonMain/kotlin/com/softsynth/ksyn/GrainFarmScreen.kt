@@ -77,7 +77,7 @@ class GrainFarmDemoPlayer : KSynPlayable() {
 
     val sineGrains = SineGrains()
     val sampleGrains = SampleGrains()
-    val delayGrains = DelayGrains(maxDelayFrames = 88200) // 2 seconds at 44.1 kHz
+    val delayGrains = DelayGrains(maxDelaySeconds = 2.0)
     val delayInputGain = Multiply()
 
     val lineIn = LineIn()

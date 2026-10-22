@@ -35,7 +35,9 @@ The GrainSourceSIne implements this. It uses a fast Taylor expansion of the sine
 
 ## Proposed API
 
-### SampleWaveShaper
+### SampleScrubber
+
+This was proposed as SampleWaveShaper and implemented as `SampleScrubber`.
 
 Ports
 * data - the sample data
@@ -78,7 +80,7 @@ So it may be better to have a GrainSourceArray interface and not modify the Grai
 
 Implementation Strategy
 
-We do not have to do any position smoothing like we do with the WaveShaper
+We do not have to do any position smoothing like we do with the SampleScrubber
 because the grain envelope starts and stops at zero. And we only set the position once when the grain is starting.
 
 ```kotlin

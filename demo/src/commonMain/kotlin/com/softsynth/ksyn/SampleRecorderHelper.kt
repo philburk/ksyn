@@ -50,12 +50,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.min
 import kotlin.math.round
 import kotlin.math.sin
 
@@ -107,6 +109,56 @@ suspend fun loadClarinetSample(): FloatSample? {
 }
 
 /**
+ * Audio captured by one microphone recording. Only the capture writes to it, and it is read
+ * only after the capture has stopped.
+ */
+private class Recording(val sampleRate: Int) {
+    val chunks = ArrayList<FloatArray>()
+    var numFrames = 0
+
+    /** Set when the screen goes away, so the recording is not delivered. */
+    var isDiscarded = false
+}
+
+/**
+ * Read the microphone into [recording] until the coroutine is cancelled or [maxFrames] are read.
+ *
+ * @return an error message, or null if the capture ran
+ */
+private suspend fun captureAudio(
+    inputBridge: AudioInputBridge,
+    recording: Recording,
+    maxFrames: Int,
+    blockFrames: Int
+): String? {
+    val openResult = inputBridge.open()
+    if (openResult != AudioResult.OK) {
+        return "Mic open failed: $openResult"
+    }
+    val startResult = inputBridge.start()
+    if (startResult != AudioResult.OK) {
+        inputBridge.close()
+        return "Mic start failed: $startResult"
+    }
+    val temp = FloatArray(blockFrames)
+    try {
+        while (currentCoroutineContext().isActive && recording.numFrames < maxFrames) {
+            val read = inputBridge.read(temp, 0, blockFrames)
+            if (read > 0) {
+                recording.chunks.add(temp.copyOf(read))
+                recording.numFrames += read
+            } else {
+                delay(5)
+            }
+        }
+    } finally {
+        inputBridge.stop()
+        inputBridge.close()
+    }
+    return null
+}
+
+/**
  * Reusable Compose toolbar for loading `Clarinet.wav` or recording a new [FloatSample]
  * from the microphone using [AudioInputBridge].
  */
@@ -125,40 +177,34 @@ fun SampleSourceBar(
     var isRecording by remember { mutableStateOf(false) }
     var statusText by remember { mutableStateOf("") }
     var recordJob by remember { mutableStateOf<Job?>(null) }
-    val recordedChunks = remember { mutableListOf<FloatArray>() }
-    var recordedFramesCount by remember { mutableStateOf(0) }
-    var recordingSampleRate by remember { mutableStateOf(44100) }
+    var recording by remember { mutableStateOf<Recording?>(null) }
 
-    fun finishRecording() {
-        val job = recordJob
-        recordJob = null
-        job?.cancel()
-        if (isRecording) {
-            isRecording = false
-            val totalFrames = recordedFramesCount
-            if (totalFrames > 0) {
-                val combined = FloatArray(totalFrames)
-                var offset = 0
-                for (chunk in recordedChunks) {
-                    val count = min(chunk.size, totalFrames - offset)
-                    if (count > 0) {
-                        chunk.copyInto(combined, offset, 0, count)
-                        offset += count
-                    }
-                }
-                normalizeAudioInPlace(combined)
-                val sample = FloatSample(combined).apply {
-                    frameRate = recordingSampleRate.toDouble()
-                }
-                val secs = round((totalFrames.toDouble() / recordingSampleRate) * 10.0) / 10.0
-                onSampleLoaded(sample, "Mic Recording (${secs}s)")
-                statusText = ""
-            } else {
-                statusText = "No audio captured"
-            }
-            recordedChunks.clear()
-            recordedFramesCount = 0
+    /** Called on the main thread after the capture has stopped. */
+    fun saveRecording(finished: Recording) {
+        if (finished.isDiscarded) return
+        val totalFrames = finished.numFrames
+        if (totalFrames <= 0) {
+            statusText = "No audio captured"
+            return
         }
+        val combined = FloatArray(totalFrames)
+        var offset = 0
+        for (chunk in finished.chunks) {
+            chunk.copyInto(combined, offset)
+            offset += chunk.size
+        }
+        normalizeAudioInPlace(combined)
+        val sample = FloatSample(combined).apply {
+            frameRate = finished.sampleRate.toDouble()
+        }
+        val secs = round((totalFrames.toDouble() / finished.sampleRate) * 10.0) / 10.0
+        onSampleLoaded(sample, "Mic Recording (${secs}s)")
+        statusText = ""
+    }
+
+    /** Stop capturing. The recording job saves the audio once the capture has stopped. */
+    fun stopRecording() {
+        recordJob?.cancel()
     }
 
     fun startRecording() {
@@ -172,10 +218,7 @@ fun SampleSourceBar(
                     return@launch
                 }
             }
-            recordedChunks.clear()
-            recordedFramesCount = 0
             val sr = AudioDeviceManager.getOptimalSampleRate().let { if (it > 0) it else 44100 }
-            recordingSampleRate = sr
             val maxFrames = sr * 10 // up to 10 seconds
             val blockFrames = 256
 
@@ -185,43 +228,28 @@ fun SampleSourceBar(
                 this.channels = 1
             }
 
+            val newRecording = Recording(sr)
+            recording = newRecording
             isRecording = true
             statusText = "Recording..."
 
-            recordJob = scope.launch(Dispatchers.Default) {
-                val openRes = inputBridge.open()
-                if (openRes != AudioResult.OK) {
-                    statusText = "Mic open failed: $openRes"
-                    isRecording = false
-                    return@launch
-                }
-                val startRes = inputBridge.start()
-                if (startRes != AudioResult.OK) {
-                    inputBridge.close()
-                    statusText = "Mic start failed: $startRes"
-                    isRecording = false
-                    return@launch
-                }
-
-                val temp = FloatArray(blockFrames)
+            // This job runs on the main thread. Only the capture runs on a background thread.
+            recordJob = scope.launch {
+                var error: String? = null
                 try {
-                    while (isActive && recordedFramesCount < maxFrames) {
-                        val read = inputBridge.read(temp, 0, blockFrames)
-                        if (read > 0) {
-                            val slice = temp.copyOf(read)
-                            recordedChunks.add(slice)
-                            recordedFramesCount += read
-                        } else {
-                            kotlinx.coroutines.delay(5)
-                        }
+                    error = withContext(Dispatchers.Default) {
+                        captureAudio(inputBridge, newRecording, maxFrames, blockFrames)
                     }
                 } finally {
-                    inputBridge.stop()
-                    inputBridge.close()
-                }
-                if (recordedFramesCount >= maxFrames) {
-                    scope.launch(Dispatchers.Main) {
-                        finishRecording()
+                    // withContext() only returns, or throws if cancelled, after the capture has
+                    // stopped, so nothing is still writing to the recording.
+                    isRecording = false
+                    recordJob = null
+                    recording = null
+                    if (error != null) {
+                        statusText = error
+                    } else {
+                        saveRecording(newRecording)
                     }
                 }
             }
@@ -230,6 +258,8 @@ fun SampleSourceBar(
 
     DisposableEffect(Unit) {
         onDispose {
+            // Do not deliver a recording to a screen that has gone.
+            recording?.isDiscarded = true
             recordJob?.cancel()
         }
     }
@@ -279,7 +309,7 @@ fun SampleSourceBar(
             Button(
                 onClick = {
                     if (isRecording) {
-                        finishRecording()
+                        stopRecording()
                     } else {
                         startRecording()
                     }

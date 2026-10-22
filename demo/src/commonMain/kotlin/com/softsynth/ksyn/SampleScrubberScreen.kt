@@ -429,8 +429,6 @@ private fun ThereminXYPad(
     }
 }
 
-typealias SampleWaveShaperScreen = SampleScrubberScreen
-
 class SampleScrubberScreen : Screen {
     @Composable
     override fun Content() {

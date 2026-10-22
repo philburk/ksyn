@@ -33,7 +33,7 @@ import kotlin.math.pow
  * Audio Anecdotes III, 2001.
  *
  * <pre><code>
- *    synth.add( sampleGrainFarm = GrainFarm() )
+ *    synth.add( grainFarm = GrainFarm() )
  *    grainFarm.allocate( NUM_GRAINS )
  * </code></pre>
  *
@@ -213,7 +213,7 @@ open class GrainFarm : UnitGenerator(), UnitSource {
 
     /**
      * Hook called once per frame inside [generate] before the active grains are mixed.
-     * Subclasses such as [DelayGrainFarm] can override this to write incoming audio
+     * Subclasses such as [DelayGrains] can override this to write incoming audio
      * into a delay buffer.
      */
     protected open fun onFrame(frameIndex: Int) {}
