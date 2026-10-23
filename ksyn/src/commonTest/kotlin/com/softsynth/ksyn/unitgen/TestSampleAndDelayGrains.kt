@@ -173,7 +173,8 @@ class TestSampleAndDelayGrains {
     @Test
     fun testDelayGrainsProducesOutputFromInput() {
         val synth = KSyn.createSynthesizer()
-        val farm = DelayGrains(maxDelaySeconds = 0.1)
+        val farm = DelayGrains()
+        farm.allocateDelay(4410) // 0.1 seconds at 44100 Hz
         farm.allocate(8)
         farm.density.set(0.8)
         farm.duration.set(0.02)
@@ -205,7 +206,8 @@ class TestSampleAndDelayGrains {
     fun testDelayGrainsDelaysTheInput() {
         val frameRate = 44100 // used when the farm is not in a synth
         val delaySeconds = 0.1
-        val farm = DelayGrains(maxDelaySeconds = 0.5)
+        val farm = DelayGrains()
+        farm.allocateDelay(frameRate / 2) // 0.5 seconds
         farm.allocate(8)
         farm.density.set(1.0) // grains back to back
         farm.duration.set(0.02)
@@ -235,20 +237,51 @@ class TestSampleAndDelayGrains {
             "output started $latency frames after the input, long after the $delayFrames frame delay")
     }
 
-    /** The delay ports are in seconds, so their limits must not depend on the frame rate. */
+    /** allocateDelay() takes the longest delay in frames, like InterpolatingDelay.allocate(). */
     @Test
-    fun testDelayGrainsLimitsAreInSeconds() {
-        val farm = DelayGrains(maxDelaySeconds = 1.5)
+    fun testDelayGrainsAllocateDelay() {
+        val frameRate = 44100 // used when the farm is not in a synth
+        val numFrames = 66150 // 1.5 seconds
+        val farm = DelayGrains()
+        farm.allocateDelay(numFrames)
         assertEquals(1.5, farm.delay.maximum.toDouble(), 1e-6)
         assertEquals(0.75, farm.delayRange.maximum.toDouble(), 1e-6)
 
-        // The longest delay fits in the buffer at the highest supported frame rate.
+        // The longest delay just fits in the buffer.
         val source = GrainSourceDelayLine(farm.delayBuffer)
-        source.frameRate = DelayGrains.MAX_FRAME_RATE.toFloat()
+        source.frameRate = frameRate.toFloat()
         source.setDelay(1.5)
-        assertEquals(1.5 * DelayGrains.MAX_FRAME_RATE + 1.0, source.delayFrames, 1e-6)
+        assertEquals(numFrames + 1.0, source.delayFrames, 1e-6, "the longest delay was clamped")
 
-        farm.allocate(4, maxDelaySeconds = 3.0)
+        // It can be allocated again with a different size.
+        farm.allocateDelay(3 * frameRate)
         assertEquals(3.0, farm.delay.maximum.toDouble(), 1e-6)
+    }
+
+    /** The port limits in seconds use the rate the synth runs at. */
+    @Test
+    fun testDelayGrainsAllocateDelayUsesTheSynthFrameRate() {
+        val synth = KSyn.createSynthesizer()
+        val farm = DelayGrains()
+        synth.add(farm)
+        synth.start(48000, 0, 2)
+        farm.allocateDelay(48000)
+        assertEquals(1.0, farm.delay.maximum.toDouble(), 1e-6)
+        synth.stop()
+    }
+
+    /** Like InterpolatingDelay, the farm is silent until its delay line is allocated. */
+    @Test
+    fun testDelayGrainsIsSilentUntilAllocated() {
+        val farm = DelayGrains()
+        farm.allocate(8)
+        farm.density.set(1.0)
+        farm.input.set(0.5)
+        var peak = 0.0f
+        repeat(200) {
+            farm.generate()
+            for (v in farm.output.getValues()) peak = maxOf(peak, abs(v))
+        }
+        assertEquals(0.0f, peak, "no delay line, so there is nothing to play")
     }
 }

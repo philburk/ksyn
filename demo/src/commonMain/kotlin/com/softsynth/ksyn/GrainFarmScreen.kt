@@ -77,7 +77,7 @@ class GrainFarmDemoPlayer : KSynPlayable() {
 
     val sineGrains = SineGrains()
     val sampleGrains = SampleGrains()
-    val delayGrains = DelayGrains(maxDelaySeconds = 2.0)
+    val delayGrains = DelayGrains()
     val delayInputGain = Multiply()
 
     val lineIn = LineIn()
@@ -112,6 +112,8 @@ class GrainFarmDemoPlayer : KSynPlayable() {
         sampleGrains.position.set(0.0)
         sampleGrains.positionRange.set(0.15)
 
+        // 2 seconds at the 44100 Hz that KSynDuplexAudioBridge runs at.
+        delayGrains.allocateDelay(2 * 44100)
         delayGrains.allocate(12)
         delayGrains.duration.set(0.08)
         delayGrains.density.set(0.6)
