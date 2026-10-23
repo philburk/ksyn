@@ -53,6 +53,17 @@ class PseudoRandom @JvmOverloads constructor(seed: Int = Random.nextInt()) {
     }
 
     /**
+     * Returns the next random number with a triangular distribution
+     * from -1.0 to 1.0.
+     * The distribution is implemented by averaging two random values.
+     *
+     * @return value from -1.0 to 1.0
+     */
+    fun nextRandomTriangle(): Double {
+        return (nextRandomDouble() + nextRandomDouble()) * 0.5;
+    }
+
+    /**
      * Returns the next random double from -1.0 to 1.0
      *
      * @return value from -1.0 to 1.0

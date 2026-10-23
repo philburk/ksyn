@@ -87,7 +87,7 @@ class DelayGrains(
             delaySource.setDelayBuffer(delayBuffer)
             val baseDelay = delay.getValues()[i].toDouble()
             val range = delayRange.getValues()[i].toDouble()
-            val randomizedDelay = (baseDelay + range * randomizer.nextRandomDouble()).coerceAtLeast(0.0)
+            val randomizedDelay = (baseDelay + range * randomizer.nextRandomTriangle()).coerceAtLeast(0.0)
             delaySource.setDelay(randomizedDelay)
         }
         super.setupGrain(grain, i)

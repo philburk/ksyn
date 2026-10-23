@@ -60,7 +60,7 @@ class SampleGrains : GrainFarm() {
             sampleGrainSource.setSample(sample)
             val basePos = position.getValues()[i].toDouble()
             val range = positionRange.getValues()[i].toDouble()
-            val randomizedPos = (basePos + range * randomizer.nextRandomDouble()).coerceIn(-1.0, 1.0)
+            val randomizedPos = (basePos + range * randomizer.nextRandomTriangle()).coerceIn(-1.0, 1.0)
             sampleGrainSource.setPosition(randomizedPos)
         }
         super.setupGrain(grain, i)

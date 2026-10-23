@@ -169,6 +169,11 @@ open class GrainFarm : UnitGenerator(), UnitSource {
         }
     }
 
+    private fun calculateOctaveScaler(rangeValue: Double): Double {
+        val octaveRange = randomizer.nextRandomTriangle() * rangeValue
+        return 2.0.pow(octaveRange)
+    }
+
     open fun setupGrain(grain: Grain, i: Int) {
         val temp = rate.getValues()[i].toDouble() * calculateOctaveScaler(rateRange.getValues()[i].toDouble())
         grain.setRate(temp)
@@ -185,11 +190,6 @@ open class GrainFarm : UnitGenerator(), UnitSource {
             Grain(GrainSourceSine(), RaisedCosineEnvelope())
         }
         setGrainArray(grainArray)
-    }
-
-    private fun calculateOctaveScaler(rangeValue: Double): Double {
-        val octaveRange = 0.5 * randomizer.nextRandomDouble() * rangeValue
-        return 2.0.pow(octaveRange)
     }
 
     override fun generate() {
