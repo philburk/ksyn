@@ -24,6 +24,15 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
+/**
+ * Runs an audio task that writes to the shared [audioBridge].
+ *
+ * Only one audio task runs at a time, across all managers, because they share one output bridge.
+ * A new task waits for the previous task to finish before it runs, so two tasks never render
+ * or write at the same time, and the previous task's cleanup cannot undo the new task's setup.
+ *
+ * Call [start] and [stop] from the main thread.
+ */
 abstract class AudioStreamManager {
 
     abstract suspend fun onAudioTask(scope: CoroutineScope)
@@ -35,22 +44,21 @@ abstract class AudioStreamManager {
     // Keep a reference to the Job of the audio stream
     private var audioStreamJob: Job? = null
 
-    private fun startAudioStreamJob(): Job { // Return the Job
-        // Cancel any existing job before starting a new one
-        audioStreamJob?.cancel() // This ensures only one stream runs if called multiple times
+    private fun startAudioStreamJob() {
+        // Replace whichever task is using the bridge, from this manager or another one.
+        val previousJob = currentJob
+        previousJob?.cancel()
+        audioStreamJob?.cancel()
 
         val job = GlobalScope.launch(Dispatchers.Default) {
+            // Cancelling is cooperative. Wait until the previous task has really stopped,
+            // including its cleanup, for example synth.stop().
+            previousJob?.join()
             onAudioTask(this)
         }
-        audioStreamJob = job // Store the new job
-        return job
-    }
-
-    // Optional: Add a function to explicitly stop the stream
-    private fun stopAudioStreamJob() {
-        audioStreamJob?.cancel()
-        audioStreamJob = null
-        println("Requested to stop audio stream job.")
+        audioStreamJob = job
+        currentJob = job
+        owner = this
     }
 
     fun start(): AudioResult {
@@ -59,31 +67,40 @@ abstract class AudioStreamManager {
         val openResult = audioBridge.open()
         if (openResult != AudioResult.OK) {
             println("Failed to open audio bridge: $openResult")
-            // Handle error, maybe show a message to the user
             return openResult
         }
         val startResult = audioBridge.start()
-        if (openResult != AudioResult.OK) {
+        if (startResult != AudioResult.OK) {
             println("Failed to start audio bridge: $startResult")
             audioBridge.close() // Clean up if start fails
-            return openResult
+            return startResult
         }
         println("AudioBridge opened and started.")
-        // Start the audio stream job
         startAudioStreamJob()
-        println("Continuous tone started.")
         return AudioResult.OK
     }
 
     fun stop() {
-        stopAudioStreamJob()
-        // Stop and close the audio bridge
-        audioBridge.stop()
-        audioBridge.close()
-        println("AudioBridge stopped and closed.")
+        val job = audioStreamJob ?: return
+        audioStreamJob = null
+        job.cancel()
+        println("Requested to stop audio stream job.")
+        // Another manager may have started since, for example the next screen.
+        // Then the bridge is theirs, so leave it running.
+        if (owner === this) {
+            owner = null
+            // Leave currentJob set, so that the next start() waits for this task to finish.
+            audioBridge.stop()
+            audioBridge.close()
+            println("AudioBridge stopped and closed.")
+        }
     }
 
     companion object {
         val audioBridge = AudioOutputBridge.create()
+
+        /** The task that is using [audioBridge], and the manager that started it. */
+        private var currentJob: Job? = null
+        private var owner: AudioStreamManager? = null
     }
 }
