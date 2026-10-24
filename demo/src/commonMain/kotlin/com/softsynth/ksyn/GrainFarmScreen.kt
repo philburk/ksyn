@@ -111,6 +111,8 @@ class GrainFarmDemoPlayer : KSynPlayable() {
         sampleGrains.density.set(0.5)
         sampleGrains.position.set(0.0)
         sampleGrains.positionRange.set(0.15)
+        // Allow negative rates, which play the grains backwards.
+        sampleGrains.rate.setup(-2.0, 1.0, 2.0)
 
         // 2 seconds at the 44100 Hz that KSynDuplexAudioBridge runs at.
         delayGrains.allocateDelay(2 * 44100)
@@ -119,6 +121,7 @@ class GrainFarmDemoPlayer : KSynPlayable() {
         delayGrains.density.set(0.6)
         delayGrains.delay.set(0.25)
         delayGrains.delayRange.set(0.1)
+        delayGrains.rate.setup(-2.0, 1.0, 2.0)
 
         queueLoopingSample(sample)
         updateRouting()

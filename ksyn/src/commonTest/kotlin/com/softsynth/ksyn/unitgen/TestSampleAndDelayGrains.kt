@@ -56,6 +56,48 @@ class TestSampleAndDelayGrains {
     }
 
     @Test
+    fun testGrainSourceSampleNegativeRatePlaysBackwards() {
+        val sample = FloatSample(FloatArray(101) { i -> i.toFloat() })
+        sample.frameRate = 44100.0
+        val source = GrainSourceSample(sample)
+        source.frameRate = 44100.0f
+        source.setRate(-1.0)
+        source.setPosition(0.0) // frame 50
+        for (expected in 50 downTo 40) {
+            assertEquals(expected.toFloat(), source.next(), 1e-5f)
+        }
+        // It stops at the start of the sample rather than wrapping.
+        source.setPosition(-1.0)
+        assertEquals(0.0f, source.next(), 1e-5f)
+        assertEquals(0.0f, source.next(), 1e-5f)
+    }
+
+    /**
+     * New audio arrives every frame while a grain plays, as in DelayGrains. At a rate of -1.0 the
+     * grain should step backwards one frame through the recording each frame.
+     */
+    @Test
+    fun testGrainSourceDelayLineNegativeRatePlaysBackwards() {
+        val delayBuffer = GrainDelayBuffer(1000)
+        var nextValue = 0
+        repeat(500) { delayBuffer.write((nextValue++).toFloat()) }
+
+        val source = GrainSourceDelayLine(delayBuffer)
+        source.frameRate = 100.0f
+        source.setRate(-1.0)
+        source.setDelay(1.0) // 100 frames behind the newest value, 499
+        var previous = Float.NaN
+        repeat(50) {
+            delayBuffer.write((nextValue++).toFloat())
+            val value = source.next()
+            if (!previous.isNaN()) {
+                assertEquals(-1.0f, value - previous, 1e-4f, "should step backwards by one frame")
+            }
+            previous = value
+        }
+    }
+
+    @Test
     fun testGrainSourceDelayLine() {
         val delayBuffer = GrainDelayBuffer(101)
         // Write 101 values: 0..100
