@@ -73,6 +73,7 @@ class DelayGrains : GrainFarm(), UnitSink {
         val defaultRange = (0.1).coerceAtMost(maxDelaySeconds * 0.25)
         delay.setup(0.0, defaultDelay, maxDelaySeconds)
         delayRange.setup(0.0, defaultRange, maxDelaySeconds * 0.5)
+        duration.setup(0.001, 0.020, maxDelaySeconds * 0.5)
     }
 
     override fun allocate(numGrains: Int) {
